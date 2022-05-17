@@ -1,0 +1,56 @@
+{{define "exchange_rate.html"}}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Exchange Rate</title>
+        <link rel="stylesheet" href="/static/common.css" />
+        <link rel="stylesheet" href="/static/exchange_rate/exchange_rate.css" />
+        <script src="/static/jquery.js"></script>
+        <script src="/static/common.js"></script>
+    </head>
+
+    <body>
+        <div id="exrate" class="exrate">
+            <div class="exrate-title">Exchange Rate</div>
+            <table class="exrate-table">
+                <thead>
+                    <tr>
+                        <th>Amount</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="text" id="amount" class="text-right" autocomplete="off" /></td>
+                        <td><select id="fromCode"></select></td>
+                        <td><select id="toCodes"></select></td>
+                        <td><button type="button" id="convert" class="btn-blue margin-lr-10">Convert</button></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div id="exrate-convert-result"></div>
+
+            <div class="exrate-rate">
+                <div class="exrate-rate-title">Exchange rate data</div>
+
+                <select id="codes"></select>
+                <button type="button" id="pullRate" class="btn-blue margin-lr-10">Update data</button>
+                <span id="exrate-pull-result"></span>
+
+                <div class="exrate-rate-desc">
+                    <div class="exrate-rate-desc-content">Convert the exchange rate directly if the currency code exists.</div>
+                    <div class="exrate-rate-desc-content">If the currency code does not exist, convert to USD first, then to the target currency.</div>
+                </div>
+
+                <div id="exrate-rate-data" class="exrate-rate-data"></div>
+            </div>
+        </div>
+
+        <script src="/static/exchange_rate/exchange_rate.js"></script>
+    </body>
+</html>
+{{end}}
