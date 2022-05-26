@@ -116,9 +116,6 @@ func Exchange(fromCode, toCode string, amount string) (msg string, ok bool) {
 		// Get rates
 		w := sqlite.NewWHere().AndEq(`code`, codeF)
 		err = sqlite.FindOne(`exrate_rate`, *w, &rate)
-		fmt.Println(`==========`)
-		fmt.Println(err)
-		fmt.Println(`==========`)
 		if err != nil {
 			return
 		}
