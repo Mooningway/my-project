@@ -1,8 +1,9 @@
 package u_sql
 
 import (
+	"bytes"
 	"database/sql"
-	"encoding/json"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -10,76 +11,172 @@ import (
 type Sql struct {
 	DriverName     string
 	DataSourceName string
-	Db             *sql.DB
+	task           bool
+	DB             *sql.DB
 }
 
+type columnValue struct {
+	columns []string
+	values  map[string]interface{}
+}
+
+type where struct {
+	conditions []condition
+	orders     []order
+}
+
+type condition struct {
+	condition  string
+	column     string
+	expression string
+	value      interface{}
+}
+
+type order struct {
+	column string
+	sort   string
+}
+
+// Connection
+// Open sql connection
 func (s *Sql) Open() (err error) {
 	db, err := sql.Open(s.DriverName, s.DataSourceName)
 	if err != nil {
 		return
 	}
-	s.Db = db
+	s.DB = db
 	return
 }
 
-func (s *Sql) Exec(biz func() (err error)) (err error) {
+func (s *Sql) NewColumn() *columnValue {
+	return &columnValue{values: map[string]interface{}{}}
+}
+
+func (c *columnValue) Set(column string, value interface{}) *columnValue {
+	c.columns = append(c.columns, column)
+	c.values[column] = value
+	return c
+}
+
+func (s *Sql) NewWHere() *where {
+	return &where{}
+}
+
+func (s *Sql) Task(task func() error) (err error) {
+	s.task = true
 	err = s.Open()
 	if err != nil {
 		return
 	}
-	defer s.Db.Close()
-	return biz()
+	defer s.DB.Close()
+	return task()
 }
 
-// Handle query result
-
-func handleQuerySlice(rows *sql.Rows) (jsonBytes []byte, err error) {
-	tableData, err := handleQueryResult(rows)
-	if err != nil {
-		return
-	}
-	return json.Marshal(tableData)
+func (w *where) AndEq(column string, value interface{}) *where {
+	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `=`, value: value})
+	return w
 }
 
-func handleQueryOne(rows *sql.Rows) (jsonBytes []byte, err error) {
-	tableData, err := handleQueryResult(rows)
-	if len(tableData) > 0 {
-		jsonBytes, _ = json.Marshal(tableData[0])
-	}
-	return
+func (w *where) AndNq(column string, value interface{}) *where {
+	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `!=`, value: value})
+	return w
 }
 
-func handleQueryResult(rows *sql.Rows) ([]map[string]interface{}, error) {
-	tableData := make([]map[string]interface{}, 0)
-	columns, err := rows.Columns()
-	if err != nil {
-		return tableData, err
-	}
+func (w *where) AndLike(column string, value interface{}) *where {
+	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `LIKE`, value: value})
+	return w
+}
 
-	columnsCount := len(columns)
-	values := make([]interface{}, columnsCount)
-	props := make([]interface{}, columnsCount)
-	for rows.Next() {
-		for i := 0; i < columnsCount; i++ {
-			props[i] = &values[i]
-		}
-		rows.Scan(props...)
+func (w *where) AndLt(column string, value interface{}) *where {
+	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `<`, value: value})
+	return w
+}
 
-		entry := make(map[string]interface{})
-		for i, col := range columns {
-			var v interface{}
-			val := values[i]
-			valByte, ok := val.([]byte)
+func (w *where) AndLte(column string, value interface{}) *where {
+	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `<=`, value: value})
+	return w
+}
 
-			if ok {
-				v = string(valByte)
+func (w *where) AndGt(column string, value interface{}) *where {
+	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `>=`, value: value})
+	return w
+}
+
+func (w *where) AndGte(column string, value interface{}) *where {
+	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `>=`, value: value})
+	return w
+}
+
+func (w *where) OrEq(column string, value interface{}) *where {
+	w.conditions = append(w.conditions, condition{condition: `OR`, column: column, expression: `=`, value: value})
+	return w
+}
+
+func (w *where) OrNq(column string, value interface{}) *where {
+	w.conditions = append(w.conditions, condition{condition: `OR`, column: column, expression: `!=`, value: value})
+	return w
+}
+
+func (w *where) OrLike(column string, value interface{}) *where {
+	w.conditions = append(w.conditions, condition{condition: `OR`, column: column, expression: `LIKE`, value: value})
+	return w
+}
+
+func (w *where) OrLt(column string, value interface{}) *where {
+	w.conditions = append(w.conditions, condition{condition: `OR`, column: column, expression: `<`, value: value})
+	return w
+}
+
+func (w *where) OrLte(column string, value interface{}) *where {
+	w.conditions = append(w.conditions, condition{condition: `OR`, column: column, expression: `<=`, value: value})
+	return w
+}
+
+func (w *where) OrGt(column string, value interface{}) *where {
+	w.conditions = append(w.conditions, condition{condition: `OR`, column: column, expression: `>`, value: value})
+	return w
+}
+
+func (w *where) OrGte(column string, value interface{}) *where {
+	w.conditions = append(w.conditions, condition{condition: `OR`, column: column, expression: `>=`, value: value})
+	return w
+}
+
+func (w *where) Asc(column string) *where {
+	w.orders = append(w.orders, order{column: column, sort: `ASC`})
+	return w
+}
+
+func (w *where) Desc(column string) *where {
+	w.orders = append(w.orders, order{column: column, sort: `DESC`})
+	return w
+}
+
+func (w *where) toSql() (whereSql string, values []interface{}) {
+	var sqlBuffer bytes.Buffer
+
+	if len(w.conditions) > 0 {
+		for ci, cv := range w.conditions {
+			if ci == 0 {
+				sqlBuffer.WriteString(` WHERE ` + cv.column + ` ` + cv.expression + ` ?`)
 			} else {
-				v = val
+				sqlBuffer.WriteString(` ` + cv.condition + ` ` + cv.column + ` ` + cv.expression + ` ?`)
 			}
-			entry[col] = v
+			values = append(values, cv.value)
 		}
-
-		tableData = append(tableData, entry)
 	}
-	return tableData, nil
+
+	orderSql := make([]string, 0)
+	if len(w.orders) > 0 {
+		for _, ov := range w.orders {
+			orderSql = append(orderSql, ov.column+` `+ov.sort)
+		}
+	}
+	if len(orderSql) > 0 {
+		sqlBuffer.WriteString(` ORDER BY `)
+		sqlBuffer.WriteString(strings.Join(orderSql, `,`))
+	}
+
+	whereSql = sqlBuffer.String()
+	return
 }

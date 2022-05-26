@@ -2,17 +2,15 @@ package init_db
 
 import (
 	"encoding/json"
-	"fmt"
 	"my-project/src/api/api_exrate"
 	"my-project/src/config/conf_sql"
-	"strings"
 )
 
 func insertExrateCode() error {
 	sqlite := conf_sql.InitSqlite()
 
-	return sqlite.Exec(func() error {
-		count, err := sqlite.CountExec(`SELECT COUNT(*) c FROM exrate_code`)
+	return sqlite.Task(func() error {
+		count, err := sqlite.Count(`exrate_code`, *sqlite.NewWHere())
 		if err != nil {
 			return err
 		}
@@ -24,14 +22,13 @@ func insertExrateCode() error {
 			return err
 		}
 
+		columns := []string{`code`, `name`, `sort`}
+		codes := codeData.SupportedCodes
 		values := make([]interface{}, 0)
-		insertValues := make([]string, 0)
-		for index, vals := range codeData.SupportedCodes {
-			insertValues = append(insertValues, `(?, ?, ?)`)
+		for index, vals := range codes {
 			values = append(values, vals[0], vals[1], index)
 		}
-		insertSql := fmt.Sprintf(`INSERT INTO exrate_code (code, name, sort) VALUES %s`, strings.Join(insertValues, `,`))
-		_, err = sqlite.Db.Exec(insertSql, values...)
+		_, err = sqlite.InsertMore(`exrate_code`, columns, len(codes), values...)
 		if err != nil {
 			return err
 		}
@@ -42,8 +39,8 @@ func insertExrateCode() error {
 func insertExrateRate() error {
 	sqlite := conf_sql.InitSqlite()
 
-	return sqlite.Exec(func() error {
-		count, err := sqlite.CountExec(`SELECT COUNT(*) c FROM exrate_rate`)
+	return sqlite.Task(func() error {
+		count, err := sqlite.Count(`exrate_rate`, *sqlite.NewWHere())
 		if err != nil {
 			return err
 		}
@@ -55,10 +52,10 @@ func insertExrateRate() error {
 			return err
 		}
 
-		baseCode := rateData.BaseCode
-		dateUnix := rateData.TimeLastUpdateUnix
 		jsonBytes, _ := json.Marshal(rateData.ConversionRates)
-		_, err = sqlite.Db.Exec(`INSERT INTO exrate_rate (date_unix, code, rates) VALUES (?, ?, ?)`, dateUnix, baseCode, jsonBytes)
+
+		insetSet := sqlite.NewColumn().Set(`date_unix`, rateData.TimeLastUpdateUnix).Set(`code`, rateData.BaseCode).Set(`rates`, jsonBytes)
+		_, err = sqlite.Insert(`exrate_rate`, *insetSet)
 		if err != nil {
 			return err
 		}

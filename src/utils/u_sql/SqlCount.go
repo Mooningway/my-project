@@ -1,26 +1,45 @@
 package u_sql
 
-import "database/sql"
+import (
+	"bytes"
+	"database/sql"
+	"fmt"
+)
 
-func (s *Sql) Count(sqlQuery string, args ...interface{}) (count int64, err error) {
-	err = s.Open()
-	defer s.Db.Close()
+func (s *Sql) Count(table string, w where) (count int64, err error) {
+	var sqlBuffer bytes.Buffer
+	sqlBuffer.WriteString(fmt.Sprintf(`SELECT COUNT(*) FROM %s`, table))
+
+	whereSql, whereValues := w.toSql()
+	if len(whereSql) > 0 {
+		sqlBuffer.WriteString(whereSql)
+	}
+
+	countSql := sqlBuffer.String()
+
+	if !s.task {
+		err = s.Open()
+		if err != nil {
+			return
+		}
+		defer s.DB.Close()
+	}
+
+	stmt, err := s.DB.Prepare(countSql)
 	if err != nil {
 		return
 	}
-	return s.CountExec(sqlQuery, args...)
-}
 
-func (s *Sql) CountExec(sqlQuery string, args ...interface{}) (count int64, err error) {
 	var rows *sql.Rows
-	if len(args) > 0 {
-		rows, err = s.Db.Query(sqlQuery, args...)
+	if len(whereValues) == 0 {
+		rows, err = stmt.Query()
 	} else {
-		rows, err = s.Db.Query(sqlQuery)
+		rows, err = stmt.Query(whereValues...)
 	}
 	if err != nil {
 		return
 	}
+
 	for rows.Next() {
 		rows.Scan(&count)
 	}

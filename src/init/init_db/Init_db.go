@@ -25,14 +25,14 @@ func Init() error {
 
 func createTable() error {
 	sqlite := conf_sql.InitSqlite()
-	return sqlite.Exec(func() (err error) {
+	return sqlite.Task(func() (err error) {
 		// exrate_code
-		_, err = sqlite.Db.Exec(sql_create_exrate_code)
+		_, err = sqlite.DB.Exec(sql_create_exrate_code)
 		if err != nil {
 			return
 		}
 		// exrate_rate
-		_, err = sqlite.Db.Exec(sql_create_exrate_rate)
+		_, err = sqlite.DB.Exec(sql_create_exrate_rate)
 		if err != nil {
 			return
 		}

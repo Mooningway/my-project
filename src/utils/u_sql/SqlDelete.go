@@ -1,26 +1,39 @@
 package u_sql
 
-func (s *Sql) Delete(sqlQuery string, args ...interface{}) (affectCount int64, err error) {
-	err = s.Open()
-	defer s.Db.Close()
-	if err != nil {
-		return
-	}
-	return s.DeleteExec(sqlQuery, args...)
-}
+import (
+	"bytes"
+	"fmt"
+)
 
-func (s *Sql) DeleteExec(sqlQuery string, args ...interface{}) (affectCount int64, err error) {
-	stmt, err := s.Db.Prepare(sqlQuery)
+func (s *Sql) Delete(table string, w where) (affectCount int64, err error) {
+	var sqlBuffer bytes.Buffer
+	sqlBuffer.WriteString(fmt.Sprintf(`DELETE FROM %s`, table))
+
+	whereSql, whereValues := w.toSql()
+	if len(whereSql) > 0 {
+		sqlBuffer.WriteString(whereSql)
+	}
+
+	deleteSql := sqlBuffer.String()
+
+	if !s.task {
+		err = s.Open()
+		if err != nil {
+			return
+		}
+		defer s.DB.Close()
+	}
+
+	stmt, err := s.DB.Prepare(deleteSql)
 	if err != nil {
 		return
 	}
-	result, err := stmt.Exec(args...)
+
+	result, err := stmt.Exec(whereValues...)
 	if err != nil {
 		return
 	}
-	affectCount, err = result.RowsAffected()
-	if err != nil {
-		return
-	}
+
+	affectCount, _ = result.RowsAffected()
 	return
 }

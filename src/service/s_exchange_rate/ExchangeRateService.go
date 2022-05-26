@@ -27,14 +27,18 @@ type rate struct {
 func Codes() ([]code, error) {
 	sqlite := conf_sql.InitSqlite()
 	codes := make([]code, 0)
-	err := sqlite.QuerySlice(`SELECT * FROM exrate_code ORDER BY sort`, &codes)
+
+	w := sqlite.NewWHere().Asc(`sort`)
+	err := sqlite.FindSlice(`exrate_code`, *w, &codes)
 	return codes, err
 }
 
 func RatesData() ([]rate, error) {
 	sqlite := conf_sql.InitSqlite()
 	rates := make([]rate, 0)
-	err := sqlite.QuerySlice(`SELECT date_unix, code FROM exrate_rate ORDER BY date_unix DESC`, &rates)
+
+	w := sqlite.NewWHere().Desc(`date_unix`)
+	err := sqlite.FindSlice(`exrate_rate`, *w, &rates, `date_unix`, `code`)
 	if err != nil {
 		return rates, err
 	}
@@ -49,7 +53,8 @@ func PullAndSaveRates(currencyCode string) (msg string) {
 	code := strings.ToUpper(currencyCode)
 
 	sqlite := conf_sql.InitSqlite()
-	codeCount, err := sqlite.Count(`SELECT COUNT(*) c FROM exrate_code WHERE code = ?`, code)
+	w := sqlite.NewWHere().AndEq(`code`, code)
+	codeCount, err := sqlite.Count(`exrate_code`, *w)
 	if err != nil {
 		msg = fmt.Sprintf(`Update data error: %v`, err)
 		return
@@ -64,11 +69,11 @@ func PullAndSaveRates(currencyCode string) (msg string) {
 		return
 	}
 
-	sqlite1 := conf_sql.InitSqlite()
-	err = sqlite1.Exec(func() (err error) {
-		rateCount, err := sqlite1.CountExec(`SELECT COUNT(*) FROM exrate_rate WHERE code = ?`, code)
+	err = sqlite.Task(func() error {
+		whereRate := sqlite.NewWHere().AndEq(`code`, code)
+		rateCount, err := sqlite.Count(`exrate_rate`, *whereRate)
 		if err != nil {
-			return
+			return err
 		}
 
 		baseCode := rateData.BaseCode
@@ -76,13 +81,15 @@ func PullAndSaveRates(currencyCode string) (msg string) {
 		jsonBytes, _ := json.Marshal(rateData.ConversionRates)
 		if rateCount > 0 {
 			// Update
-			_, err = sqlite1.Db.Exec(`UPDATE exrate_rate SET date_unix = ?, rates = ? WHERE code = ?`, dateUnix, jsonBytes, baseCode)
+			updateSet := sqlite.NewColumn().Set(`date_unix`, dateUnix).Set(`rates`, jsonBytes)
+			updateWhere := sqlite.NewWHere().AndEq(`code`, baseCode)
+			_, err = sqlite.Update(`exrate_rate`, *updateSet, *updateWhere)
 		} else {
 			// Insert
-			_, err = sqlite1.Db.Exec(`INSERT INTO exrate_rate (date_unix, code, rates) VALUES (?, ?, ?)`, dateUnix, baseCode, jsonBytes)
-
+			insetSet := sqlite.NewColumn().Set(`date_unix`, dateUnix).Set(`code`, baseCode).Set(`rates`, jsonBytes)
+			_, err = sqlite.Insert(`exrate_rate`, *insetSet)
 		}
-		return
+		return err
 	})
 	if err != nil {
 		msg = fmt.Sprintf(`Update data error: %v`, err)
@@ -105,16 +112,20 @@ func Exchange(fromCode, toCode string, amount string) (msg string, ok bool) {
 	var defaultRate bool = false
 
 	sqlite := conf_sql.InitSqlite()
-	err = sqlite.Exec(func() (err error) {
+	err = sqlite.Task(func() (err error) {
 		// Get rates
-		sqlQuery := `SELECT * FROM exrate_rate WHERE code = ?`
-		err = sqlite.QueryOneExec(sqlQuery, &rate, codeF)
+		w := sqlite.NewWHere().AndEq(`code`, codeF)
+		err = sqlite.FindOne(`exrate_rate`, *w, &rate)
+		fmt.Println(`==========`)
+		fmt.Println(err)
+		fmt.Println(`==========`)
 		if err != nil {
 			return
 		}
 		if len(rate.RateString) == 0 {
 			defaultRate = true
-			err = sqlite.QueryOneExec(sqlQuery, &rate, `USD`)
+			w1 := sqlite.NewWHere().AndEq(`code`, `USD`)
+			err = sqlite.FindOne(`exrate_rate`, *w1, &rate)
 		}
 		return
 	})
@@ -169,6 +180,8 @@ func DeleteRateByCode(currencyCode string) error {
 	if len(code) == 0 || code == `USD` {
 		return nil
 	}
-	_, err := sqlite.Delete(`DELETE FROM exrate_rate WHERE code = ?`, code)
+
+	w := sqlite.NewWHere().AndEq(`code`, code)
+	_, err := sqlite.Delete(`exrate_rate`, *w)
 	return err
 }
