@@ -23,7 +23,7 @@ func Index(c *gin.Context) {
 func Router(r *gin.Engine) {
 
 	// Get currency code list
-	r.GET(`/exrate/code`, func(ctx *gin.Context) {
+	r.GET(`/api/exrate/code`, func(ctx *gin.Context) {
 		codes, err := s_exchange_rate.Codes()
 		if err != nil {
 			logger.Print(`Get currency code error: %v`, err)
@@ -33,7 +33,7 @@ func Router(r *gin.Engine) {
 	})
 
 	// Update exchange rate for config
-	r.PUT(`/exrate/rate/:code`, func(ctx *gin.Context) {
+	r.PUT(`/api/exrate/rate/:code`, func(ctx *gin.Context) {
 		code := ctx.Param(`code`)
 		msg := s_exchange_rate.PullAndSaveRates(code)
 		if len(msg) > 0 {
@@ -44,7 +44,7 @@ func Router(r *gin.Engine) {
 	})
 
 	// Convert exchange rate
-	r.POST(`/exrate/convert`, func(ctx *gin.Context) {
+	r.POST(`/api/exrate/convert`, func(ctx *gin.Context) {
 		data := convert{}
 		ctx.ShouldBindJSON(&data)
 		msg, ok := s_exchange_rate.Exchange(data.FromCode, data.ToCode, data.Amount)
@@ -56,7 +56,7 @@ func Router(r *gin.Engine) {
 	})
 
 	// Get reates Of currency code
-	r.GET(`/exrate/ratedata`, func(ctx *gin.Context) {
+	r.GET(`/api/exrate/ratedata`, func(ctx *gin.Context) {
 		rates, err := s_exchange_rate.RatesData()
 		if err != nil {
 			logger.Print(`Get rates data error: %v`, err)
@@ -66,7 +66,7 @@ func Router(r *gin.Engine) {
 	})
 
 	// Delete rate
-	r.DELETE(`exrate/rate/:code`, func(ctx *gin.Context) {
+	r.DELETE(`/api/exrate/rate/:code`, func(ctx *gin.Context) {
 		code := ctx.Param(`code`)
 		err := s_exchange_rate.DeleteRateByCode(code)
 		if err != nil {

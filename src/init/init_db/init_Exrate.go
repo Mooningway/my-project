@@ -10,7 +10,7 @@ func insertExrateCode() error {
 	sqlite := conf_sql.InitSqlite()
 
 	return sqlite.Task(func() error {
-		count, err := sqlite.Count(`exrate_code`, *sqlite.NewWHere())
+		count, err := sqlite.Count(`exrate_code`, *sqlite.NewWhere())
 		if err != nil {
 			return err
 		}
@@ -40,7 +40,7 @@ func insertExrateRate() error {
 	sqlite := conf_sql.InitSqlite()
 
 	return sqlite.Task(func() error {
-		count, err := sqlite.Count(`exrate_rate`, *sqlite.NewWHere())
+		count, err := sqlite.Count(`exrate_rate`, *sqlite.NewWhere())
 		if err != nil {
 			return err
 		}

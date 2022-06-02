@@ -36,6 +36,16 @@ func createTable() error {
 		if err != nil {
 			return
 		}
+		// bookmark
+		_, err = sqlite.DB.Exec(sql_create_bookmark)
+		if err != nil {
+			return
+		}
+		// bookmark_tag
+		_, err = sqlite.DB.Exec(sql_create_bookmark_tag)
+		if err != nil {
+			return
+		}
 		return
 	})
 }

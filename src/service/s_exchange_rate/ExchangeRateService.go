@@ -28,7 +28,7 @@ func Codes() ([]code, error) {
 	sqlite := conf_sql.InitSqlite()
 	codes := make([]code, 0)
 
-	w := sqlite.NewWHere().Asc(`sort`)
+	w := sqlite.NewWhere().Asc(`sort`)
 	err := sqlite.FindSlice(`exrate_code`, *w, &codes)
 	return codes, err
 }
@@ -37,7 +37,7 @@ func RatesData() ([]rate, error) {
 	sqlite := conf_sql.InitSqlite()
 	rates := make([]rate, 0)
 
-	w := sqlite.NewWHere().Desc(`date_unix`)
+	w := sqlite.NewWhere().Desc(`date_unix`)
 	err := sqlite.FindSlice(`exrate_rate`, *w, &rates, `date_unix`, `code`)
 	if err != nil {
 		return rates, err
@@ -49,28 +49,25 @@ func RatesData() ([]rate, error) {
 	return rates1, nil
 }
 
-func PullAndSaveRates(currencyCode string) (msg string) {
+func PullAndSaveRates(currencyCode string) string {
 	code := strings.ToUpper(currencyCode)
 
 	sqlite := conf_sql.InitSqlite()
-	w := sqlite.NewWHere().AndEq(`code`, code)
+	w := sqlite.NewWhere().AndEq(`code`, code)
 	codeCount, err := sqlite.Count(`exrate_code`, *w)
 	if err != nil {
-		msg = fmt.Sprintf(`Update data error: %v`, err)
-		return
+		return fmt.Sprintf(`Update data error: %v`, err)
 	}
 	if codeCount == 0 {
-		msg = fmt.Sprintf(`%s is not supported.`, code)
-		return
+		return fmt.Sprintf(`%s is not supported.`, code)
 	}
 	rateData, err := api_exrate.PullExchangeRates(code)
 	if err != nil {
-		msg = fmt.Sprintf(`Update data error: %v`, err)
-		return
+		return fmt.Sprintf(`Update data error: %v`, err)
 	}
 
 	err = sqlite.Task(func() error {
-		whereRate := sqlite.NewWHere().AndEq(`code`, code)
+		whereRate := sqlite.NewWhere().AndEq(`code`, code)
 		rateCount, err := sqlite.Count(`exrate_rate`, *whereRate)
 		if err != nil {
 			return err
@@ -82,7 +79,7 @@ func PullAndSaveRates(currencyCode string) (msg string) {
 		if rateCount > 0 {
 			// Update
 			updateSet := sqlite.NewColumn().Set(`date_unix`, dateUnix).Set(`rates`, jsonBytes)
-			updateWhere := sqlite.NewWHere().AndEq(`code`, baseCode)
+			updateWhere := sqlite.NewWhere().AndEq(`code`, baseCode)
 			_, err = sqlite.Update(`exrate_rate`, *updateSet, *updateWhere)
 		} else {
 			// Insert
@@ -92,10 +89,9 @@ func PullAndSaveRates(currencyCode string) (msg string) {
 		return err
 	})
 	if err != nil {
-		msg = fmt.Sprintf(`Update data error: %v`, err)
-		return
+		return fmt.Sprintf(`Update data error: %v`, err)
 	}
-	return
+	return ``
 }
 
 func Exchange(fromCode, toCode string, amount string) (msg string, ok bool) {
@@ -114,14 +110,14 @@ func Exchange(fromCode, toCode string, amount string) (msg string, ok bool) {
 	sqlite := conf_sql.InitSqlite()
 	err = sqlite.Task(func() (err error) {
 		// Get rates
-		w := sqlite.NewWHere().AndEq(`code`, codeF)
+		w := sqlite.NewWhere().AndEq(`code`, codeF)
 		err = sqlite.FindOne(`exrate_rate`, *w, &rate)
 		if err != nil {
 			return
 		}
 		if len(rate.RateString) == 0 {
 			defaultRate = true
-			w1 := sqlite.NewWHere().AndEq(`code`, `USD`)
+			w1 := sqlite.NewWhere().AndEq(`code`, `USD`)
 			err = sqlite.FindOne(`exrate_rate`, *w1, &rate)
 		}
 		return
@@ -178,7 +174,7 @@ func DeleteRateByCode(currencyCode string) error {
 		return nil
 	}
 
-	w := sqlite.NewWHere().AndEq(`code`, code)
+	w := sqlite.NewWhere().AndEq(`code`, code)
 	_, err := sqlite.Delete(`exrate_rate`, *w)
 	return err
 }

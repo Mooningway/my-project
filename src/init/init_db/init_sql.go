@@ -13,3 +13,19 @@ CREATE TABLE if not exists "exrate_rate" (
 	"code"		TEXT,
 	"rates"		BLOB
 )`
+
+const sql_create_bookmark string = `
+CREATE TABLE if not exists "bookmark" (
+	"name"			TEXT,
+	"tag"			TEXT,
+	"link"			TEXT,
+	"description"	TEXT,
+	"sort"			INTEGER
+)`
+
+const sql_create_bookmark_tag string = `
+CREATE TABLE if not exists "bookmark_tag" (
+	"name"	TEXT,
+	"tag"	TEXT,
+	"sort"	INTEGER
+)`
