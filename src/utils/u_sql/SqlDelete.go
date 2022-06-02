@@ -15,7 +15,10 @@ func (s *Sql) Delete(table string, w where) (affectCount int64, err error) {
 	}
 
 	deleteSql := sqlBuffer.String()
+	return s.DeleteSql(deleteSql, whereValues...)
+}
 
+func (s *Sql) DeleteSql(deleteSql string, values ...interface{}) (affectCount int64, err error) {
 	if !s.task {
 		err = s.Open()
 		if err != nil {
@@ -29,7 +32,7 @@ func (s *Sql) Delete(table string, w where) (affectCount int64, err error) {
 		return
 	}
 
-	result, err := stmt.Exec(whereValues...)
+	result, err := stmt.Exec(values...)
 	if err != nil {
 		return
 	}

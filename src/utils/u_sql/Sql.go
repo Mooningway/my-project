@@ -3,6 +3,7 @@ package u_sql
 import (
 	"bytes"
 	"database/sql"
+	"fmt"
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -23,6 +24,8 @@ type columnValue struct {
 type where struct {
 	conditions []condition
 	orders     []order
+	limit0     int64
+	limit1     int64
 }
 
 type condition struct {
@@ -58,7 +61,7 @@ func (c *columnValue) Set(column string, value interface{}) *columnValue {
 	return c
 }
 
-func (s *Sql) NewWHere() *where {
+func (s *Sql) NewWhere() *where {
 	return &where{}
 }
 
@@ -88,7 +91,7 @@ func (w *where) AndLike(column string, value interface{}) *where {
 }
 
 func (w *where) AndLt(column string, value interface{}) *where {
-	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `<`, value: value})
+	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `<`, value: `%` + fmt.Sprintf(`%v`, value) + `%`})
 	return w
 }
 
@@ -118,7 +121,7 @@ func (w *where) OrNq(column string, value interface{}) *where {
 }
 
 func (w *where) OrLike(column string, value interface{}) *where {
-	w.conditions = append(w.conditions, condition{condition: `OR`, column: column, expression: `LIKE`, value: value})
+	w.conditions = append(w.conditions, condition{condition: `OR`, column: column, expression: `LIKE`, value: `%` + fmt.Sprintf(`%v`, value) + `%`})
 	return w
 }
 
@@ -149,6 +152,12 @@ func (w *where) Asc(column string) *where {
 
 func (w *where) Desc(column string) *where {
 	w.orders = append(w.orders, order{column: column, sort: `DESC`})
+	return w
+}
+
+func (w *where) Limit(pageNum, pageSize int64) *where {
+	w.limit0 = (pageNum - 1) * pageSize
+	w.limit1 = pageSize
 	return w
 }
 

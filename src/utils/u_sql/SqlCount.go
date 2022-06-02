@@ -17,6 +17,10 @@ func (s *Sql) Count(table string, w where) (count int64, err error) {
 
 	countSql := sqlBuffer.String()
 
+	return s.CountSql(countSql, whereValues...)
+}
+
+func (s *Sql) CountSql(countSql string, values ...interface{}) (count int64, err error) {
 	if !s.task {
 		err = s.Open()
 		if err != nil {
@@ -31,10 +35,10 @@ func (s *Sql) Count(table string, w where) (count int64, err error) {
 	}
 
 	var rows *sql.Rows
-	if len(whereValues) == 0 {
+	if len(values) == 0 {
 		rows, err = stmt.Query()
 	} else {
-		rows, err = stmt.Query(whereValues...)
+		rows, err = stmt.Query(values...)
 	}
 	if err != nil {
 		return

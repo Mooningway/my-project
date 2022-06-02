@@ -29,7 +29,10 @@ func (s *Sql) Update(table string, cv columnValue, w where) (affectCount int64, 
 	} else {
 		updateSql = fmt.Sprintf(`UPDATE %s SET %s`, table, strings.Join(setSql, `,`))
 	}
+	return s.UpdateSql(updateSql, values...)
+}
 
+func (s *Sql) UpdateSql(updateSql string, values ...interface{}) (affectCount int64, err error) {
 	if !s.task {
 		err = s.Open()
 		if err != nil {

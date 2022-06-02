@@ -9,57 +9,22 @@ import (
 )
 
 func (s *Sql) FindOne(table string, w where, formatData interface{}, columns ...string) (err error) {
-	rows, err := s.find(true, table, w, columns...)
+	selectSql, values := s.findToSql(true, table, w, columns...)
 	if err != nil {
 		return
 	}
-
-	jsonBytes, err := handleFindOne(rows)
-	if err != nil {
-		return
-	}
-
-	err = json.Unmarshal(jsonBytes, formatData)
-	return
+	return s.FindOneSql(selectSql, formatData, values...)
 }
 
 func (s *Sql) FindSlice(table string, w where, formatData interface{}, columns ...string) (err error) {
-	rows, err := s.find(false, table, w, columns...)
+	selectSql, values := s.findToSql(false, table, w, columns...)
 	if err != nil {
 		return
 	}
-
-	jsonBytes, err := handleFindSlice(rows)
-	if err != nil {
-		return
-	}
-
-	err = json.Unmarshal(jsonBytes, formatData)
-	return
+	return s.FindSliceSql(selectSql, formatData, values...)
 }
 
-func (s *Sql) find(one bool, table string, w where, columns ...string) (rows *sql.Rows, err error) {
-	columnsSql := `*`
-	if len(columns) > 0 {
-		columnsSql = strings.Join(columns, `,`)
-	}
-
-	var sqlBuffer bytes.Buffer
-	sqlBuffer.WriteString(fmt.Sprintf(`SELECT %s FROM %s`, columnsSql, table))
-
-	whereSql, whereValues := w.toSql()
-	if len(whereSql) > 0 {
-		sqlBuffer.WriteString(whereSql)
-	}
-
-	if one {
-		sqlBuffer.WriteString(` LIMIT 1`)
-	}
-
-	selectSql := sqlBuffer.String()
-
-	fmt.Println(selectSql)
-
+func (s *Sql) FindOneSql(selectSql string, formatData interface{}, values ...interface{}) (err error) {
 	if !s.task {
 		err = s.Open()
 		if err != nil {
@@ -73,11 +38,71 @@ func (s *Sql) find(one bool, table string, w where, columns ...string) (rows *sq
 		return
 	}
 
-	if len(whereValues) == 0 {
+	var rows *sql.Rows
+	if len(values) == 0 {
 		rows, err = stmt.Query()
 	} else {
-		rows, err = stmt.Query(whereValues...)
+		rows, err = stmt.Query(values...)
 	}
+
+	jsonBytes, err := handleFindOne(rows)
+	if err != nil {
+		return
+	}
+
+	err = json.Unmarshal(jsonBytes, formatData)
+	return
+}
+
+func (s *Sql) FindSliceSql(selectSql string, formatData interface{}, values ...interface{}) (err error) {
+	if !s.task {
+		err = s.Open()
+		if err != nil {
+			return
+		}
+		defer s.DB.Close()
+	}
+
+	stmt, err := s.DB.Prepare(selectSql)
+	if err != nil {
+		return
+	}
+
+	var rows *sql.Rows
+	if len(values) == 0 {
+		rows, err = stmt.Query()
+	} else {
+		rows, err = stmt.Query(values...)
+	}
+
+	jsonBytes, err := handleFindSlice(rows)
+	if err != nil {
+		return
+	}
+
+	err = json.Unmarshal(jsonBytes, formatData)
+	return
+}
+
+func (s *Sql) findToSql(one bool, table string, w where, columns ...string) (selectSql string, values []interface{}) {
+	columnsSql := `*`
+	if len(columns) > 0 {
+		columnsSql = strings.Join(columns, `,`)
+	}
+
+	var sqlBuffer bytes.Buffer
+	sqlBuffer.WriteString(fmt.Sprintf(`SELECT %s FROM %s`, columnsSql, table))
+
+	whereSql, values := w.toSql()
+	if len(whereSql) > 0 {
+		sqlBuffer.WriteString(whereSql)
+	}
+
+	if one {
+		sqlBuffer.WriteString(` LIMIT 1`)
+	}
+
+	selectSql = sqlBuffer.String()
 	return
 }
 

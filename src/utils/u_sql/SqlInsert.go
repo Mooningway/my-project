@@ -17,27 +17,7 @@ func (s *Sql) Insert(table string, cv columnValue) (id int64, err error) {
 	}
 
 	insertSql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, table, strings.Join(columns, `,`), strings.Join(placeholders, `,`))
-
-	if !s.task {
-		err = s.Open()
-		if err != nil {
-			return
-		}
-		defer s.DB.Close()
-	}
-
-	stmt, err := s.DB.Prepare(insertSql)
-	if err != nil {
-		return
-	}
-
-	result, err := stmt.Exec(values...)
-	if err != nil {
-		return
-	}
-
-	id, _ = result.LastInsertId()
-	return
+	return s.InsertSql(insertSql, values...)
 }
 
 func (s *Sql) InsertMore(table string, columns []string, count int, values ...interface{}) (id int64, err error) {
@@ -51,7 +31,10 @@ func (s *Sql) InsertMore(table string, columns []string, count int, values ...in
 	}
 
 	insertSql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES %s`, table, strings.Join(columns, `,`), strings.Join(placeholders, `,`))
+	return s.InsertSql(insertSql, values...)
+}
 
+func (s *Sql) InsertSql(insertSql string, values ...interface{}) (id int64, err error) {
 	if !s.task {
 		err = s.Open()
 		if err != nil {
