@@ -45,23 +45,11 @@ func Router(r *gin.Engine) {
 		common.SuccessJson(``, bookmarkTag, ctx)
 	})
 
-	// Insert bookmark tag
+	// Insert or Update bookmark tag
 	r.POST(`/api/bookmark/tag`, func(ctx *gin.Context) {
 		params := model.BookmarkTag{}
 		ctx.ShouldBindJSON(&params)
-		msg, ok := s_bookmark_tag.Insert(params)
-		if ok {
-			common.SuccessJson(msg, nil, ctx)
-		} else {
-			common.ErrorJson(msg, nil, ctx)
-		}
-	})
-
-	// Update bookmark tag
-	r.PUT(`/api/bookmark/tag`, func(ctx *gin.Context) {
-		params := model.BookmarkTag{}
-		ctx.ShouldBindJSON(&params)
-		msg, ok := s_bookmark_tag.Update(params)
+		msg, ok := s_bookmark_tag.Save(&params)
 		if ok {
 			common.SuccessJson(msg, nil, ctx)
 		} else {

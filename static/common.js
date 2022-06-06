@@ -102,11 +102,20 @@ function removeSession(key) {
 
 // Input limit
 
-function inputsInt(val) {
+function inputsInt(val, defaultVal = ``, minVal = -999999999, maxVal = 999999999) {
     if (val) {
         let val1 = val + ``
-        return val1 === `` ? val1 : val1.replace(/[^0-9]/g, ``)
+        val1 = val1.replace(/[^0-9]/g, ``)
+        if (val1 === ``) {
+            return defaultVal
+        }
+        if (Number(val1) < minVal) {
+            return minVal + ``
+        } else if (Number(val1) > maxVal) {
+            return maxVal + ``
+        }
+        return val1
     } else {
-        return ``
+        return defaultVal
     }
 }

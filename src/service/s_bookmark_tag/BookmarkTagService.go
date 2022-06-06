@@ -46,100 +46,91 @@ func ById(id int64) (tag model.BookmarkTag, err error) {
 	return
 }
 
-func Insert(data model.BookmarkTag) (msg string, ok bool) {
+func Save(data *model.BookmarkTag) (msg string, ok bool) {
 	if data.Id != 0 {
 		msg = com_msg.ADD_FAIL
 	}
-	name := strings.TrimSpace(data.Name)
-	if len(name) == 0 {
+	data.Name = strings.TrimSpace(data.Name)
+	if len(data.Name) == 0 {
 		msg = com_msg.Required(`Name`)
 		return
 	}
-	tag := strings.TrimSpace(data.Tag)
-	if len(tag) == 0 {
-		msg = com_msg.Required(`Tag`)
-		return
-	}
+	data.Description = strings.TrimSpace(data.Description)
 	sort := data.Sort
-	if sort < 0 {
-		msg = com_msg.PositiveInteger(`Sort`)
+	if sort < 0 || sort > 99 {
+		msg = com_msg.Range(`Sort`, `0`, `99`)
 		return
 	}
 
+	if data.Id == 0 {
+		// insert
+		return insert(*data)
+	} else {
+		// update
+		return update(*data)
+	}
+}
+
+func insert(data model.BookmarkTag) (msg string, ok bool) {
 	sqlite := conf_sql.InitSqlite()
-	w1 := sqlite.NewWhere().AndNq(`tag`, tag)
-	count1, err := sqlite.Count(table, *w1)
+
+	w := sqlite.NewWhere().AndEq(`name`, data.Name)
+	count, err := sqlite.Count(table, *w)
 	if err != nil {
 		msg = fmt.Sprintf(`Save bookmark tag error: %v`, err)
 		return
 	}
-	if count1 > 0 {
-		msg = `The tag already exists and cannot be added.`
+	if count > 0 {
+		msg = com_msg.ExistsNotAdd(`name`)
 		return
 	}
 
-	insertSet := sqlite.NewColumn().Set(`name`, name).Set(`tag`, tag).Set(`sort`, sort)
+	insertSet := sqlite.NewColumn().Set(`name`, data.Name).Set(`description`, data.Description).Set(`sort`, data.Sort)
 	_, err = sqlite.Insert(table, *insertSet)
 	if err != nil {
 		msg = fmt.Sprintf(`Save bookmark tag error: %v`, err)
 		return
 	}
+
+	msg = com_msg.ADD_SUCCESS
 	ok = true
 	return
 }
 
-func Update(data model.BookmarkTag) (msg string, ok bool) {
-	id := data.Id
-	if id <= 0 {
-		return com_msg.DEL_SUCCESS, true
-	}
-	name := strings.TrimSpace(data.Name)
-	if len(name) == 0 {
-		msg = com_msg.Required(`Name`)
-		return
-	}
-	tag := strings.TrimSpace(data.Tag)
-	if len(tag) == 0 {
-		msg = com_msg.Required(`Tag`)
-		return
-	}
-	sort := data.Sort
-	if sort < 0 {
-		msg = com_msg.PositiveInteger(`Sort`)
-		return
-	}
-
+func update(data model.BookmarkTag) (msg string, ok bool) {
 	sqlite := conf_sql.InitSqlite()
-	w1 := sqlite.NewWhere().AndEq(`tag`, tag).AndNq(`rowid`, id)
+
+	w1 := sqlite.NewWhere().AndEq(`name`, data.Name).AndNq(`rowid`, data.Id)
 	count1, err := sqlite.Count(table, *w1)
 	if err != nil {
 		msg = fmt.Sprintf(`Update bookmark tag error: %v`, err)
 		return
 	}
 	if count1 > 0 {
-		msg = com_msg.ExistsNotUpdate(`Tag`)
+		msg = com_msg.ExistsNotUpdate(`name`)
 		return
 	}
 
-	w2 := sqlite.NewWhere().AndEq(`tag`, tag)
+	w2 := sqlite.NewWhere().AndEq(`name`, data.Name)
 	count2, err := sqlite.Count(`bookmark`, *w2)
 	if err != nil {
 		msg = fmt.Sprintf(`Update bookmark tag error: %v`, err)
 		return
 	}
 	if count2 > 0 {
-		msg = com_msg.HasBeenUsedNotUpdate(`Tag`)
+		msg = com_msg.HasBeenUsedNotUpdate(`Bookmark tag`)
 		return
 	}
 
-	updateSet3 := sqlite.NewColumn().Set(`name`, name).Set(`tag`, tag).Set(`sort`, sort)
-	w3 := sqlite.NewWhere().AndEq(`rowid`, id)
+	updateSet3 := sqlite.NewColumn().Set(`name`, data.Name).Set(`description`, data.Description).Set(`sort`, data.Sort)
+	w3 := sqlite.NewWhere().AndEq(`rowid`, data.Id)
 	_, err = sqlite.Update(table, *updateSet3, *w3)
 	if err != nil {
 		msg = fmt.Sprintf(`Update bookmark tag error: %v`, err)
 		return
 	}
 
+	msg = com_msg.UPD_SUCCESS
 	ok = true
 	return
 }
@@ -147,7 +138,7 @@ func Update(data model.BookmarkTag) (msg string, ok bool) {
 func Delete(id int64) (msg string, ok bool) {
 	sqlite := conf_sql.InitSqlite()
 
-	count1, err := sqlite.CountSql(`select count(*) as c from bookmark where tag = (select tag from bookmark_tag where rowid = ?)`, id)
+	count1, err := sqlite.CountSql(`select count(*) as c from bookmark where tag = (select name from bookmark_tag where rowid = ?)`, id)
 	if err != nil {
 		msg = fmt.Sprintf(`Delete bookmark tag error: %v`, err)
 		return
@@ -164,6 +155,7 @@ func Delete(id int64) (msg string, ok bool) {
 		return
 	}
 
+	msg = com_msg.DEL_SUCCESS
 	ok = true
 	return
 }

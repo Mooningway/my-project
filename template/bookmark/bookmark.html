@@ -1,0 +1,92 @@
+{{{ define "bookmark.html" }}}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Exchange Rate</title>
+        <link rel="stylesheet" href="/static/common.css" />
+        <link rel="stylesheet" href="/static/bookmark/bookmark.css" />
+        <script src="/static/jquery.js"></script>
+        <script src="/static/vue.js"></script>
+        <script src="/static/common.js"></script>
+    </head>
+
+    <body>
+        <div id="bookmark-app" class="bookmark">
+            <div class="bm-title">Bookmark Manager</div>
+
+            <div id="top-operate" class="bm-top-operate" v-if="bookmarksView">
+                <button type="button" class="btn-blue margin-lr-10" @click="toEditor(`Add`)">Add</button>
+                <input type="text" class="margin-lr-10" v-model="queryForm.keyword" />
+                <button type="button" class="btn-blue margin-lr-10" @click="getBookmarks">Search</button>
+            </div>
+
+            <div class="bm-tags" v-if="bookmarksView">
+                <div class="bm-tags-title">Tags: </div>
+                <span :class="queryForm.tag == tag.name ? `bm-tags-item-active` : `bm-tags-item`" @click="bookmarkTagsClick(tag.name)"
+                    :value="tag.name" :key="tag.rowid + tagIndex" v-for="(tag, tagIndex) in bookmarkTags">{{ tag.name }}</span>
+            </div>
+
+            <div class="bm-list" v-if="bookmarksView">
+                <div class="bm-list-title">Bookmarks: </div>
+                <span class="bm-list-item"
+                    :key="b.rowid + bIndex" v-for="(b, bIndex) in bookmarks">
+                    <a :href="b.link" class="bm-go" target="_blank">{{ b.name }}</a>
+                    <span class="bm-upd" @click="toEditor(`Update`, b.rowid)">u</span>
+                    <span class="bm-del" @click="toEditor(`Delete`, b.rowid)">×</span>
+                </span>
+            </div>
+
+            <table class="bm-edit" v-if="bookmarkEditView">
+                <tbody>
+                    <tr v-if="formResult.active">
+                        <td colspan="2" class="text-center">
+                            <div :class="formResult.success ? 'msg msg-green' : 'msg msg-red'">{{ formResult.msg }}</div>
+                        </td>
+                    </tr>
+                    <tr class="bm-edit-line">
+                        <td class="bm-edit-label text-right">ID</td>
+                        <td class="bm-edit-input"><input type="text" class="text-center" v-model="form.rowid" disabled="disabled" /></td>
+                    </tr>
+                    <tr>
+                        <td class="bm-edit-label text-right">Name</td>
+                        <td class="bm-edit-input"><input type="text" v-model="form.name" :disabled="formDisabled" /></td>
+                    </tr>
+                    <tr>
+                        <td class="bm-edit-label text-right">Tag</td>
+                        <td class="bm-edit-input">
+                            <select v-model="form.tag" :disabled="formDisabled">
+                                <option :value="tag.name" :key="tag.rowid + tagIndex" v-for="(tag, tagIndex) in bookmarkTags">{{ tag.name }}</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="bm-edit-label text-right">Link</td>
+                        <td class="bm-edit-input">
+                            <textarea rows="8" cols="80" class="bm-edit-link" v-model="form.link" :disabled="formDisabled"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="bm-edit-label text-right">Description</td>
+                        <td class="bm-edit-input">
+                            <textarea rows="8" cols="80" class="bm-edit-link" v-model="form.description" :disabled="formDisabled"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="bm-edit-label text-right">Sort</td>
+                        <td class="bm-edit-input"><input type="text" class="text-center" v-model="form.sort" :disabled="formDisabled" @change="sortChange" /></td>
+                    </tr>
+                    <tr v-if="!formOperating">
+                        <td colspan="2" class="bm-edit-operate text-center">
+                            <button type="button" class="btn-blue" @click="formSubmit">{{ formOperate }}</button>
+                            <button type="button" @click="formReset">Cancel</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <script src="/static/bookmark/bookmark.js"></script>
+    </body>
+</html>
+{{{ end }}}

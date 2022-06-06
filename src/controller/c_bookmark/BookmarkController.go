@@ -6,12 +6,13 @@ import (
 	"my-project/src/model"
 	"my-project/src/service/s_bookmark"
 	"my-project/src/utils/u_string"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 func Index(c *gin.Context) {
-
+	c.HTML(http.StatusOK, `bookmark.html`, nil)
 }
 
 func Router(r *gin.Engine) {
@@ -36,23 +37,11 @@ func Router(r *gin.Engine) {
 		common.SuccessJson(``, bookmark, ctx)
 	})
 
-	// Insert bookmark
+	// Insert ro Update bookmark
 	r.POST(`/api/bookmark`, func(ctx *gin.Context) {
 		params := model.Bookmark{}
 		ctx.ShouldBindJSON(&params)
-		msg, ok := s_bookmark.Insert(params)
-		if ok {
-			common.SuccessJson(msg, nil, ctx)
-		} else {
-			common.ErrorJson(msg, nil, ctx)
-		}
-	})
-
-	// Update bookmark tag
-	r.PUT(`/api/bookmark`, func(ctx *gin.Context) {
-		params := model.Bookmark{}
-		ctx.ShouldBindJSON(&params)
-		msg, ok := s_bookmark.Update(params)
+		msg, ok := s_bookmark.Save(&params)
 		if ok {
 			common.SuccessJson(msg, nil, ctx)
 		} else {

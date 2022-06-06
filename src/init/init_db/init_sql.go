@@ -25,7 +25,7 @@ CREATE TABLE if not exists "bookmark" (
 
 const sql_create_bookmark_tag string = `
 CREATE TABLE if not exists "bookmark_tag" (
-	"name"	TEXT,
-	"tag"	TEXT,
-	"sort"	INTEGER
+	"name"			TEXT,
+	"description"	TEXT,
+	"sort"			INTEGER
 )`

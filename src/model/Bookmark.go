@@ -17,8 +17,8 @@ type Bookmark struct {
 }
 
 type BookmarkTag struct {
-	Id   int64  `json:"rowid"`
-	Name string `json:"name"`
-	Tag  string `json:"tag"`
-	Sort int    `json:"sort"`
+	Id          int64  `json:"rowid"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Sort        int    `json:"sort"`
 }

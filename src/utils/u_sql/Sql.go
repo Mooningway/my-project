@@ -86,12 +86,12 @@ func (w *where) AndNq(column string, value interface{}) *where {
 }
 
 func (w *where) AndLike(column string, value interface{}) *where {
-	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `LIKE`, value: value})
+	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `LIKE`, value: `%` + fmt.Sprintf(`%v`, value) + `%`})
 	return w
 }
 
 func (w *where) AndLt(column string, value interface{}) *where {
-	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `<`, value: `%` + fmt.Sprintf(`%v`, value) + `%`})
+	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `<`, value: value})
 	return w
 }
 
@@ -184,6 +184,11 @@ func (w *where) toSql() (whereSql string, values []interface{}) {
 	if len(orderSql) > 0 {
 		sqlBuffer.WriteString(` ORDER BY `)
 		sqlBuffer.WriteString(strings.Join(orderSql, `,`))
+	}
+
+	if w.limit1 > 0 {
+		sqlBuffer.WriteString(` LIMIT ?, ?`)
+		values = append(values, w.limit0, w.limit1)
 	}
 
 	whereSql = sqlBuffer.String()

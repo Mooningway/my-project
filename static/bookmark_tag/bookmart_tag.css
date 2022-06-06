@@ -13,18 +13,18 @@
     font-weight: bold;
 }
 
-.bm-top-operate {
+.bmt-top-operate {
     margin-top: 20px;
 }
 
-.bm-list {
+.bmt-list {
     margin-top: 50px;
     width: 100%;
 }
 
 .bmt-edit {
     margin-top: 50px;
-    margin-left: 400px;
+    margin-left: 250px;
     
 }
 .bmt-edit-label {
@@ -40,4 +40,7 @@
 }
 .bmt-edit-operate button {
     margin: 10px 0 0 120px; 
+}
+.bmt-edit-description {
+    resize: none;
 }

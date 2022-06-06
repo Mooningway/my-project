@@ -20,6 +20,14 @@ func PositiveInteger(word string) string {
 	return fmt.Sprintf(`%s must be a positive integer.`, word)
 }
 
+func Range(word string, min string, max string) string {
+	return fmt.Sprintf(`%s must be in the range %s-%s.`, word, min, max)
+}
+
+func ExistsNotAdd(word string) string {
+	return fmt.Sprintf(`%s already exists and cannot be added.`, word)
+}
+
 func ExistsNotUpdate(word string) string {
 	return fmt.Sprintf(`%s already exists and cannot be updated.`, word)
 }

@@ -18,7 +18,7 @@ func Page(dto model.BookmarkDto) (bookmarks []model.Bookmark, total int64, err e
 			w.AndLike(`name`, dto.Keyword)
 		}
 		if len(dto.Tag) > 0 {
-			w.AndLike(`tag`, dto.Tag)
+			w.AndEq(`tag`, dto.Tag)
 		}
 
 		total, err = sqlite.Count(table, *w)
@@ -26,9 +26,10 @@ func Page(dto model.BookmarkDto) (bookmarks []model.Bookmark, total int64, err e
 			return err
 		}
 
+		fmt.Println(dto)
 		if total > 0 {
-			w.Desc(`sort`).Desc(`rowid`).Limit(dto.Page, dto.PageSize)
-			err = sqlite.FindSlice(table, *w, &bookmarks)
+			w.Desc(`sort`).Desc(`rowid`).Limit(dto.Page, dto.PageSize).Limit(dto.Page, dto.PageSize)
+			err = sqlite.FindSlice(table, *w, &bookmarks, `rowid`, `*`)
 		}
 		return err
 	})
@@ -38,82 +39,67 @@ func Page(dto model.BookmarkDto) (bookmarks []model.Bookmark, total int64, err e
 func ById(id int64) (bookmark model.Bookmark, err error) {
 	sqlite := conf_sql.InitSqlite()
 	w := sqlite.NewWhere().AndEq(`rowid`, id)
-	err = sqlite.FindOne(table, *w, &bookmark)
+	err = sqlite.FindOne(table, *w, &bookmark, `rowid`, `*`)
 	return
 }
 
-func Insert(data model.Bookmark) (msg string, ok bool) {
-	if data.Id != 0 {
-		msg = com_msg.ADD_FAIL
-	}
-	name := strings.TrimSpace(data.Name)
-	if len(name) == 0 {
+func Save(data *model.Bookmark) (msg string, ok bool) {
+	data.Name = strings.TrimSpace(data.Name)
+	if len(data.Name) == 0 {
 		msg = com_msg.Required(`Name`)
 		return
 	}
-	tag := strings.TrimSpace(data.Tag)
-	if len(tag) == 0 {
+	data.Tag = strings.TrimSpace(data.Tag)
+	if len(data.Tag) == 0 {
 		msg = com_msg.Required(`Tag`)
 		return
 	}
-	link := strings.TrimSpace(data.Link)
-	if len(link) == 0 {
+	data.Link = strings.TrimSpace(data.Link)
+	if len(data.Link) == 0 {
 		msg = com_msg.Required(`Link`)
 		return
 	}
+	data.Description = strings.TrimSpace(data.Description)
 	sort := data.Sort
-	if sort < 0 {
-		msg = com_msg.PositiveInteger(`Sort`)
+	if sort < 0 || sort > 99 {
+		msg = com_msg.Range(`Sort`, `0`, `99`)
 		return
 	}
 
+	if data.Id == 0 {
+		// insert
+		return insert(*data)
+	} else {
+		// update
+		return update(*data)
+	}
+}
+
+func insert(data model.Bookmark) (msg string, ok bool) {
 	sqlite := conf_sql.InitSqlite()
-	insertSet := sqlite.NewColumn().Set(`name`, name).Set(`tag`, tag).Set(`link`, link).Set(`sort`, sort)
-	_, err := sqlite.Insert(tag, *insertSet)
+	insertSet := sqlite.NewColumn().Set(`name`, data.Name).Set(`tag`, data.Tag).Set(`link`, data.Link).Set(`description`, data.Description).Set(`sort`, data.Sort)
+	_, err := sqlite.Insert(table, *insertSet)
 	if err != nil {
 		msg = fmt.Sprintf(`Save bookmark error: %v`, err)
 		return
 	}
 
+	msg = com_msg.ADD_SUCCESS
 	ok = true
 	return
 }
 
-func Update(data model.Bookmark) (msg string, ok bool) {
-	id := data.Id
-	if id <= 0 {
-		return com_msg.DEL_SUCCESS, true
-	}
-	name := strings.TrimSpace(data.Name)
-	if len(name) == 0 {
-		msg = com_msg.Required(`Name`)
-		return
-	}
-	tag := strings.TrimSpace(data.Tag)
-	if len(tag) == 0 {
-		msg = com_msg.Required(`Tag`)
-		return
-	}
-	link := strings.TrimSpace(data.Link)
-	if len(link) == 0 {
-		msg = com_msg.Required(`Link`)
-		return
-	}
-	sort := data.Sort
-	if sort < 0 {
-		msg = com_msg.PositiveInteger(`Sort`)
-		return
-	}
-
+func update(data model.Bookmark) (msg string, ok bool) {
 	sqlite := conf_sql.InitSqlite()
-	updateSet := sqlite.NewColumn().Set(`name`, name).Set(`tag`, tag).Set(`link`, link).Set(`sort`, sort)
-	w := sqlite.NewWhere().AndEq(`rowid`, id)
+	updateSet := sqlite.NewColumn().Set(`name`, data.Name).Set(`tag`, data.Tag).Set(`link`, data.Link).Set(`description`, data.Description).Set(`sort`, data.Sort)
+	w := sqlite.NewWhere().AndEq(`rowid`, data.Id)
 	_, err := sqlite.Update(table, *updateSet, *w)
 	if err != nil {
 		msg = fmt.Sprintf(`Update bookmark error: %v`, err)
 		return
 	}
 
+	msg = com_msg.UPD_SUCCESS
 	ok = true
 	return
 }
@@ -127,6 +113,7 @@ func Delete(id int64) (msg string, ok bool) {
 		return
 	}
 
+	msg = com_msg.DEL_SUCCESS
 	ok = true
 	return
 }
