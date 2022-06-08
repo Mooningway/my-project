@@ -34,7 +34,7 @@ func Page(dto model.BookmarkDto) (bookmarkTags []model.BookmarkTag, total int64,
 
 func All() (tags []model.BookmarkTag, err error) {
 	sqlite := conf_sql.InitSqlite()
-	w := sqlite.NewWhere().Desc(`sort`).Desc(`rowid`)
+	w := sqlite.NewWhere().Desc(`sort`).Asc(`rowid`)
 	err = sqlite.FindSlice(table, *w, &tags, `rowid`, `*`)
 	return
 }

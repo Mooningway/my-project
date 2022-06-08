@@ -6,7 +6,6 @@
         <title>Exchange Rate</title>
         <link rel="stylesheet" href="/static/bootstrap.css" />
         <link rel="stylesheet" href="/static/common.css" />
-        <link rel="stylesheet" href="/static/bookmark/bookmark.css" />
         <script src="/static/jquery.js"></script>
         <script src="/static/vue.js"></script>
         <script src="/static/common.js"></script>
@@ -23,31 +22,49 @@
                 <div class="col-4">
                     <input type="text" class="form-control" v-model="queryForm.keyword" />
                 </div>
+                <div class="col-4">
+                    <select class="form-select" v-model="queryForm.tag">
+                        <option :value="tag.name" :key="tag.rowid + tagIndex" v-for="(tag, tagIndex) in bookmarkTags">{{ tag.name }}</option>
+                    </select>
+                </div>
                 <div class="col-1">
                     <button type="button" class="btn btn-primary" @click="getBookmarks">Search</button>
                 </div>
-            </div>
-
-            <div class="bm-tags" v-if="bookmarksView">
-                <div class="mt-4 bold">Tags: </div>
-                <div class="mt-3">
-                    <button type="button"
-                    :class="queryForm.tag == tag.name ? `btn btn-dark btn-sm bm-tag` : `btn btn-secondary btn-sm bm-tag`"
-                    @click="bookmarkTagsClick(tag.name)"
-                    :key="tag.rowid + tagIndex" v-for="(tag, tagIndex) in bookmarkTags">{{ tag.name }}</button>
+                <div class="col-1">
+                    <button type="button" class="btn btn-primary" @click="queryFormRest">Reset</button>
                 </div>
             </div>
 
-            <div v-if="bookmarksView">
-                <div class="mt-4 bold">Bookmarks: </div>
-                <div class="mt-3">
-                    <span class="badge bg-dark bm-item" :key="b.rowid + bIndex" v-for="(b, bIndex) in bookmarks">
-                        <a :href="b.link" class="bm-go" target="_blank">{{ b.name }}</a>
-                        <span class="badge bg-primary bm-item-operate" @click="toEditor(`Update`, b.rowid)">e</span>
-                        <span class="badge bg-danger bm-item-operate" @click="toEditor(`Delete`, b.rowid)">×</span>
-                    </span>
-                </div>
-            </div>
+            <table class="table table-hover" v-if="bookmarksView">
+                <thead>
+                    <tr>
+                        <th class="text-center">Name</th>
+                        <th class="text-center">Tag</th>
+                        <th class="text-center">Sort</th>
+                        <th class="text-center">Operate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr :key="b.rowid + bIndex" v-for="(b, bIndex) in bookmarks">
+                        <td>{{ b.name }}</td>
+                        <td>{{ b.tag }}</td>
+                        <td>{{ b.sort }}</td>
+                        <td>
+                            <a :href="b.link" class="btn btn-success btn-sm me-3" target="_blank">GO</a>
+                            <button type="button" class="btn btn-primary btn-sm me-3" @click="toEditor(`Update`, b.rowid)">Editor</button>
+                            <button type="button" class="btn btn-danger btn-sm" @click="toEditor(`Delete`, b.rowid)">Delete</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <nav class="row" v-if="bookmarksView">
+                <ul class="pagination justify-content-end">
+                    <li :class="pageIndex === queryForm.page ? `page-item active` : `page-item`" :key="`page_` + pageIndex" v-for="pageIndex in queryForm.lastPage">
+                        <a class="page-link" href="javascript: void(0)" v-if="pageIndex === queryForm.page">{{ pageIndex }}</a>
+                        <a class="page-link" href="javascript: void(0)" @click="pageClick(pageIndex)" v-else>{{ pageIndex }}</a>
+                    </li>
+                </ul>
+            </nav>
 
             <form v-if="bookmarkEditView">
                 <div class="mb-4 row">

@@ -4,7 +4,7 @@ const BookmarkTagApp = {
             bookmarkTags: [],
             bookmarkTagsView: true,
             bookmarkTagEditView: false,
-            queryForm: { keyword: `` },
+            queryForm: { keyword: ``, page: 1, pageSize: 10, lastPage: 1 },
             form: { rowid: ``, name: ``, description: ``, sort: 0 },
             formDisabled: true,
             formOperate: ``,
@@ -20,7 +20,13 @@ const BookmarkTagApp = {
             this.bookmarkTags = []
             ajaxPostJson(`/api/bookmark/tag/page`, this.queryForm, response => {
                 this.bookmarkTags = response.data
+                this.queryForm.page = Number(response.page)
+                this.queryForm.lastPage = Number(response.lastPage)
             })
+        },
+        pageClick(page) {
+            this.queryForm.page = Number(page)
+            this.getBookmarkTags()
         },
         toEditor(formOperate, id = 0) {
             this.formOperate = formOperate

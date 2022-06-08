@@ -39,19 +39,21 @@
                     <tr :key="tag.tag + tagIndex" v-for="(tag, tagIndex) in bookmarkTags">
                         <td class="text-center">{{ tag.name }}</td>
                         <td class="text-center">{{ tag.sort }}</td>
-                        <td class="text-center bmt-tab-operate">
-                            <div class="row justify-content-md-center">
-                                <div class="col-2">
-                                    <button type="button" class="btn btn-primary btn-sm" @click="toEditor(`Update`, tag.rowid)">Editor</button>
-                                </div>
-                                <div class="col-2">
-                                    <button type="button" class="btn btn-danger btn-sm" @click="toEditor(`Delete`, tag.rowid)">Delete</button>
-                                </div>
-                            </div>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-primary btn-sm me-3" @click="toEditor(`Update`, tag.rowid)">Editor</button>
+                            <button type="button" class="btn btn-danger btn-sm" @click="toEditor(`Delete`, tag.rowid)">Delete</button>
                         </td>
                     </tr>
                 </tbody>
             </table>
+            <nav class="row" v-if="bookmarkTagsView">
+                <ul class="pagination justify-content-end">
+                    <li :class="pageIndex === queryForm.page ? `page-item active` : `page-item`" :key="`page_` + pageIndex" v-for="pageIndex in queryForm.lastPage">
+                        <a class="page-link" href="javascript: void(0)" v-if="pageIndex === queryForm.page">{{ pageIndex }}</a>
+                        <a class="page-link" href="javascript: void(0)" @click="pageClick(pageIndex)" v-else>{{ pageIndex }}</a>
+                    </li>
+                </ul>
+            </nav>
 
             <form v-if="bookmarkTagEditView">
                 <div class="mb-4 row">
