@@ -26,7 +26,6 @@ func Page(dto model.BookmarkDto) (bookmarks []model.Bookmark, total int64, err e
 			return err
 		}
 
-		fmt.Println(dto)
 		if total > 0 {
 			w.Desc(`sort`).Asc(`rowid`).Limit(dto.Page, dto.PageSize).Limit(dto.Page, dto.PageSize)
 			err = sqlite.FindSlice(table, *w, &bookmarks, `rowid`, `*`)
