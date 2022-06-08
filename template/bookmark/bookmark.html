@@ -46,10 +46,10 @@
                 </thead>
                 <tbody>
                     <tr :key="b.rowid + bIndex" v-for="(b, bIndex) in bookmarks">
-                        <td>{{ b.name }}</td>
-                        <td>{{ b.tag }}</td>
-                        <td>{{ b.sort }}</td>
-                        <td>
+                        <td class="text-center">{{ b.name }}</td>
+                        <td class="text-center">{{ b.tag }}</td>
+                        <td class="text-center">{{ b.sort }}</td>
+                        <td class="text-center">
                             <a :href="b.link" class="btn btn-success btn-sm me-3" target="_blank">GO</a>
                             <button type="button" class="btn btn-primary btn-sm me-3" @click="toEditor(`Update`, b.rowid)">Editor</button>
                             <button type="button" class="btn btn-danger btn-sm" @click="toEditor(`Delete`, b.rowid)">Delete</button>
