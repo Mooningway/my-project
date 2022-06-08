@@ -29,3 +29,11 @@ CREATE TABLE if not exists "bookmark_tag" (
 	"description"	TEXT,
 	"sort"			INTEGER
 )`
+
+const sql_create_search_engine string = `
+CREATE TABLE if not exists "search_engine" (
+	"name"		TEXT,
+	"url"		TEXT,
+	"search"	TEXT,
+	"sort"		INTEGER
+)`

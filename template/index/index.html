@@ -1,0 +1,60 @@
+{{{ define "index.html" }}}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Index</title>
+        <link rel="stylesheet" href="/static/bootstrap.css" />
+        <link rel="stylesheet" href="/static/common.css" />
+        <script src="/static/jquery.js"></script>
+        <script src="/static/vue.js"></script>
+        <script src="/static/common.js"></script>
+        <style>
+            .menu {
+                background-color: ghostwhite;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="index-app" class="container">
+            <div class="row mt-5">
+                <div class="col-2">
+                    <select class="form-select" v-model="searchEngineIndex">
+                        <option :value="seIndex" :key="`se_` + se.name + `_` + seIndex" v-for="(se, seIndex) in searchEngines">{{ se.name }}</option>
+                    </select>
+                </div>
+                <div class="col-9">
+                    <input type="text" class="form-control" v-model="goKeyword" @change="keywordChange" />
+                </div>
+                <div class="col-1">
+                    <a :href="goUrl" class="btn btn-primary" target="_blank">GO</a>
+                </div>
+            </div>
+
+            <div class="mt-5 clearfix">
+                <div class="col-2 float-start">
+                    <div class="row btn-group-vertical">
+                         <a href="/bookmark" class="btn btn-primary">Bookmark Manager</a>
+                         <a href="/bookmark/tag" class="btn btn-primary">Bookmark Tag Manager</a>
+                         <a href="/exrate" class="btn btn-primary">Exchange Rate</a>
+                    </div>
+                </div>
+                <div class="col-10 float-end">
+                    <div>
+                        <button type="button" :class="bookmarkTagValue === tag.name ? `btn btn-danger me-4 mb-4` : `btn btn-dark me-4 mb-4`"
+                            @click="tagClick(tag.name)"
+                            :key="tag.name + `_` + tagIndex" v-for="(tag, tagIndex) in bookmarkTags">{{ tag.name }}</button>
+                    </div>
+                    <div class="mt-5">
+                        <a :href="b.link" class="btn btn-success btn-sm me-4 mb-4" target="_blank"
+                            :key="b.name + `_` + bIndex" v-for="(b, bIndex) in bookmarks">{{ b.name }}</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="/static/index/index.js"></script>
+    </body>
+</html>
+{{{ end }}}

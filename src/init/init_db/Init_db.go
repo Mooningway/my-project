@@ -46,6 +46,11 @@ func createTable() error {
 		if err != nil {
 			return
 		}
+		// search_engine
+		_, err = sqlite.DB.Exec(sql_create_search_engine)
+		if err != nil {
+			return
+		}
 		return
 	})
 }
@@ -58,6 +63,11 @@ func insertData() error {
 	}
 	// exrate_rate
 	err = insertExrateRate()
+	if err != nil {
+		return err
+	}
+	// search_engine
+	err = insertSearchEngine()
 	if err != nil {
 		return err
 	}
