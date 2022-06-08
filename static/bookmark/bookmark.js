@@ -2,7 +2,6 @@ const BookmarkApp = {
     data() {
         return {
             bookmarks: [],
-            bookmarkTotal: 0,
             bookmarkTags: [],
             bookmarksView: true,
             bookmarkEditView: false,
@@ -19,12 +18,13 @@ const BookmarkApp = {
     },
     methods: {
         getBookmarks() {
+            this.bookmarks = []
             ajaxPostJson(`/api/bookmark/page`, this.queryForm, response => {
                 this.bookmarks = response.data
-                this.bookmarkTotal = response.total
             })
         },
         getBookmarkTags() {
+            this.bookmarkTags = []
             ajaxGet(`/api/bookmark/tag`, response => {
                 this.bookmarkTags = response.data
             })

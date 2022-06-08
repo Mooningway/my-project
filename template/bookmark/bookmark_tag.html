@@ -4,77 +4,94 @@
     <head>
         <meta charset="utf-8" />
         <title>Exchange Rate</title>
+        <link rel="stylesheet" href="/static/bootstrap.css" />
         <link rel="stylesheet" href="/static/common.css" />
-        <link rel="stylesheet" href="/static/bookmark_tag/bookmart_tag.css" />
         <script src="/static/jquery.js"></script>
         <script src="/static/vue.js"></script>
         <script src="/static/common.js"></script>
     </head>
 
     <body>
-        <div id="bookmark-tag-app" class="bookmark_tag">
-            <div class="bmt-title">Bookmark Tag Manager</div>
+        <div id="bookmark-tag-app" class="container box margin-t-100">
+            <div class="box-title">Bookmark Tag Manager</div>
 
-            <div class="bmt-top-operate" v-if="bookmarkTagsView">
-                <button type="button" class="btn-blue margin-lr-10" @click="toEditor(`Add`)">Add</button>
-                <input type="text" class="margin-lr-10" v-model="queryForm.keyword" />
-                <button type="button" class="btn-blue margin-lr-10" @click="getBookmarkTags">Search</button>                
+            <div class="row" v-if="bookmarkTagsView">
+                <div class="col-2">
+                    <button type="button" class="btn btn-primary" @click="toEditor(`Add`)">Add</button>
+                </div>
+                <div class="col-4">
+                    <input type="text" class="form-control" v-model="queryForm.keyword" />
+                </div>
+                <div class="col-1">
+                    <button type="button" class="btn btn-primary" @click="getBookmarkTags">Search</button>                
+                </div>
             </div>
 
-            <table class="bmt-list" v-if="bookmarkTagsView">
+            <table class="table table-hover" v-if="bookmarkTagsView">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Sort</th>
-                        <th>Operate</th>
+                        <th class="text-center">Name</th>
+                        <th class="text-center">Sort</th>
+                        <th class="text-center">Operate</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr :key="tag.tag + tagIndex" v-for="(tag, tagIndex) in bookmarkTags">
                         <td class="text-center">{{ tag.name }}</td>
                         <td class="text-center">{{ tag.sort }}</td>
-                        <td class="text-center">
-                            <button type="button" class="btn-blue margin-lr-10" @click="toEditor(`Update`, tag.rowid)">Editor</button>
-                            <button type="button" class="btn-blue margin-lr-10" @click="toEditor(`Delete`, tag.rowid)">Delete</button>
+                        <td class="text-center bmt-tab-operate">
+                            <div class="row justify-content-md-center">
+                                <div class="col-1">
+                                    <button type="button" class="btn btn-primary btn-sm" @click="toEditor(`Update`, tag.rowid)">Editor</button>
+                                </div>
+                                <div class="col-1">
+                                    <button type="button" class="btn btn-danger btn-sm" @click="toEditor(`Delete`, tag.rowid)">Delete</button>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
             </table>
 
-            <table class="bmt-edit" v-if="bookmarkTagEditView">
-                <tbody>
-                    <tr v-if="formResult.active">
-                        <td colspan="2" class="text-center">
-                            <div :class="formResult.success ? 'msg msg-green' : 'msg msg-red'">{{ formResult.msg }}</div>
-                        </td>
-                    </tr>
-                    <tr class="bmt-edit-line">
-                        <td class="bmt-edit-label text-right">ID</td>
-                        <td class="bmt-edit-input"><input type="text" class="text-center" v-model="form.rowid" disabled="disabled" /></td>
-                    </tr>
-                    <tr>
-                        <td class="bmt-edit-label text-right">Name</td>
-                        <td class="bmt-edit-input"><input type="text" v-model="form.name" :disabled="formDisabled" /></td>
-                    </tr>
-                    <tr>
-                        <td class="bmt-edit-label text-right">Description</td>
-                        <td class="bmt-edit-input">
-                            <textarea rows="8" cols="80" class="bmt-edit-description" v-model="form.description" :disabled="formDisabled"></textarea>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="bmt-edit-label text-right">Sort</td>
-                        <td class="bmt-edit-input"><input type="text" class="text-center" v-model="form.sort" :disabled="formDisabled" @change="sortChange" /></td>
-                    </tr>
-                    <tr v-if="!formOperating">
-                        <td colspan="2" class="bmt-edit-operate text-center">
-                            <button type="button" class="btn-blue" @click="formSubmit">{{ formOperate }}</button>
-                            <button type="button" @click="formReset">Cancel</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            
+            <form v-if="bookmarkTagEditView">
+                <div class="mb-4 row">
+                    <label class="col-2 col-form-label text-right">ID</label>
+                    <div class="col-3">
+                        <input type="text" class="form-control text-center" v-model="form.rowid" disabled="disabled" />
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label class="col-2 col-form-label text-right">Name</label>
+                    <div class="col-3">
+                        <input type="text" class="form-control" v-model="form.name" :disabled="formDisabled" />
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label class="col-2 col-form-label text-right">Description</label>
+                    <div class="col-6">
+                        <textarea rows="8" class="form-control resize-none" v-model="form.description" :disabled="formDisabled"></textarea>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label class="col-2 col-form-label text-right">Sort</label>
+                    <div class="col-3">
+                        <input type="text" class="form-control text-center" v-model="form.sort" :disabled="formDisabled" @change="sortChange" />
+                    </div>
+                </div>
+                <div class="mt-5 row justify-content-md-center" v-if="!formOperating">
+                    <div class="col-1">
+                        <button type="button" class="btn btn-primary" @click="formSubmit">{{ formOperate }}</button>
+                    </div>
+                    <div class="col-1">
+                        <button type="button" class="btn btn-secondary" @click="formReset">Cancel</button>
+                    </div>
+                </div>
+                <div class="mt-4 row justify-content-md-center" v-if="formResult.active">
+                    <div class="col-8">
+                        <div :class="formResult.success ? 'alert alert-success' : 'alert alert-danger'">{{ formResult.msg }}</div>
+                    </div>
+                </div>
+            </form>
         </div>
 
         <script src="/static/bookmark_tag/bookmark_tag.js"></script>

@@ -1,114 +1,22 @@
-.bookmark {
-    margin: 50px auto 0 auto;
-    padding: 20px;
-    width: 1366px;
-    border-radius: 3px;
-    background-color: ghostwhite;
+.bm-tag {
+    margin-right: 25px;
 }
 
-.bm-title {
-    padding-bottom: 15px;
-    border-bottom: 1px solid #454545;
-    font-size: 22px;
-    font-weight: bold;
+.bm-item {
+    margin: 0 25px 20px 0;
 }
 
-.bm-top-operate {
-    margin-top: 20px;
-}
-
-.bm-tags {
-    margin-top: 50px;
-}
-.bm-tags-title {
-    margin-bottom: 20px;
-    color: #454545;
-    font-size: 16px;
-    font-weight: bold;
-}
-.bm-tags-item {
-    cursor: pointer;
-    display: inline-block;
-    margin-right: 20px;
-    padding: 10px 18px;
-    border: 1px solid #454545;
-    border-radius: 3px;
-    color: #454545;
-}
-.bm-tags-item:hover {
-    text-decoration: underline;
-}
-.bm-tags-item-active {
-    cursor: pointer;
-    display: inline-block;
-    margin-right: 20px;
-    padding: 10px 18px;
-    border: 1px solid #454545;
-    border-radius: 3px;
-    background-color: #454545;
+.bm-item a, .bm-item a:visited {
     color: ghostwhite;
-}
-
-
-.bm-list {
-    margin-top: 30px;
-}
-.bm-list-title {
-    margin-bottom: 20px;
-    color: #454545;
-    font-size: 16px;
-    font-weight: bold;
-}
-.bm-list-item {
-    display: inline-block;
-    margin: 0 20px 20px 0;
-    padding: 0 5px;
-    border: 1px solid #454545;
-    border-radius: 3px;
-    color: #454545;
-}
-
-.bm-go, .bm-go:visited {
-    display: inline-block;
-    margin-right: 5px;
-    padding: 0 10px 0 3px;
-    border-right: 1px solid #454545;
-    color: #454545;
     text-decoration: none;
 }
-.bm-go:hover {
-    color: #454545;
+.bm-item a:hover {
+    color: ghostwhite;
     text-decoration: underline;
 }
-.bm-upd, .bm-del {
+
+.bm-item-operate {
     cursor: pointer;
     display: inline-block;
-    padding: 0 3px;
-}
-.bm-upd:hover, .bm-del:hover {
-    text-decoration: underline;
-}
-
-
-.bm-edit {
-    margin-top: 50px;
-    margin-left: 250px;
-    
-}
-.bm-edit-label {
-    padding: 20px 50px 20px 60px;
-    font-size: 20px;
-    font-weight: bold;
-}
-.bm-edit-input {
-    padding: 20px 0;
-}
-.bm-edit-operate {
-    padding: 20px 0;
-}
-.bm-edit-operate button {
-    margin: 10px 0 0 120px; 
-}
-.bm-edit-link {
-    resize: none;
+    margin-left: 8px;
 }

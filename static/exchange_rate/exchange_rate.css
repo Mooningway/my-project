@@ -1,56 +1,8 @@
-.exrate {
-    margin: 50px auto 0 auto;
-    padding: 20px;
-    width: 1366px;
-    border-radius: 3px;
-    background-color: ghostwhite;
-}
-.exrate-title {
-    padding-bottom: 15px;
-    border-bottom: 1px solid #454545;
-    font-size: 22px;
-    font-weight: bold;
-}
-.exrate-table {
-    margin-top: 20px;
-    width: 100%;
-}
-.exrate-table thead tr {
-    text-align: left;
-    font-size: 22px;
-}
-
-.exrate-convert-result {
-    margin-top: 30px;
-}
-
-.exrate-rate {
-    margin-top: 50px;
-}
-.exrate-rate-title {
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #454545;
-    font-size: 22px;
-    font-weight: bold;
-}
-.exrate-rate-desc {
-    margin-top: 20px;
-}
-.exrate-rate-desc-content {
-    height: 30px;
-    line-height: 30px;
-}
 .exrate-rate-data {
-    margin-top: 10px;
+    margin-right: 20px;
 }
-.exrate-rate-data-item {
-    display: inline-block;
-    margin: 10px 20px 10px 0;
-    padding: 5px 8px;
-}
-.exrate-rate-data-delete {
-    display: inline-block;
-    margin: 0 3px 0 9px;
+
+.exrate-rate-data-del {
     cursor: pointer;
+    margin-left: 5px;
 }

@@ -17,6 +17,7 @@ const BookmarkTagApp = {
     },
     methods: {
         getBookmarkTags() {
+            this.bookmarkTags = []
             ajaxPostJson(`/api/bookmark/tag/page`, this.queryForm, response => {
                 this.bookmarkTags = response.data
             })
