@@ -20,10 +20,10 @@ type resultPage struct {
 	Page      int64       `json:"page"`
 	PageSize  int64       `json:"pageSize"`
 	Total     int64       `json:"total"`
-	FirstPage int64       `jons:"firstPage"`
-	PrevPage  int64       `jons:"prevPage"`
-	NextPage  int64       `jons:"nextPage"`
-	LastPage  int64       `jons:"lastPage"`
+	FirstPage int64       `json:"firstPage"`
+	PrevPage  int64       `json:"prevPage"`
+	NextPage  int64       `json:"nextPage"`
+	LastPage  int64       `json:"lastPage"`
 }
 
 func SuccessJson(msg string, data interface{}, ctx *gin.Context) {
@@ -49,7 +49,7 @@ func SuccessPageJson(msg string, page, pageSize, total int64, data interface{}, 
 	}
 	lastPage, prevPage, nextPage := initPage(page, pageSize, total)
 	ctx.JSON(http.StatusOK, resultPage{Code: `200`, Data: data1, Msg: msg,
-		Page: page, PageSize: page, Total: total, FirstPage: 1, PrevPage: prevPage, NextPage: nextPage, LastPage: lastPage})
+		Page: page, PageSize: pageSize, Total: total, FirstPage: 1, PrevPage: prevPage, NextPage: nextPage, LastPage: lastPage})
 }
 
 func ErrorPageJson(msg string, page, pageSize, total int64, data interface{}, ctx *gin.Context) {
@@ -59,7 +59,7 @@ func ErrorPageJson(msg string, page, pageSize, total int64, data interface{}, ct
 	}
 	lastPage, prevPage, nextPage := initPage(page, pageSize, total)
 	ctx.JSON(http.StatusOK, resultPage{Code: `500`, Data: data1, Msg: msg,
-		Page: page, PageSize: page, Total: total, FirstPage: 1, PrevPage: prevPage, NextPage: nextPage, LastPage: lastPage})
+		Page: page, PageSize: pageSize, Total: total, FirstPage: 1, PrevPage: prevPage, NextPage: nextPage, LastPage: lastPage})
 }
 
 func initPage(page, pageSize, total int64) (lastPage, prevPage, nextPage int64) {
