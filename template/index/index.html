@@ -7,40 +7,40 @@
         <link rel="stylesheet" href="/static/bootstrap.css" />
         <link rel="stylesheet" href="/static/common.css" />
         <script src="/static/jquery.js"></script>
+        <script src="/static/bootstrap.js"></script>
         <script src="/static/vue.js"></script>
         <script src="/static/common.js"></script>
-        <style>
-            .menu {
-                background-color: ghostwhite;
-            }
-        </style>
     </head>
 
     <body>
+        <div class="dropdown position-absolute top-0 end-0">
+            <button class="btn btn-dark btn-sm dropdown-toggle" type="button" id="menu" data-bs-toggle="dropdown" aria-expanded="false">Menu</button>
+            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="menu">
+                <li><a href="/bookmark" class="dropdown-item">Bookmark Manager</a></li>
+                <li><a href="/bookmark/tag" class="dropdown-item">Bookmark Tag Manager</a></li>
+                <li><a href="/exrate" class="dropdown-item">Exchange Rate</a></li>
+                <li><a href="/md5" class="dropdown-item">MD5</a></li>
+            </ul>
+        </div>
+
         <div id="index-app" class="container">
+            <div class="row mt-5"></div>
             <div class="row mt-5">
                 <div class="col-2">
                     <select class="form-select" v-model="searchEngineIndex">
                         <option :value="seIndex" :key="`se_` + se.name + `_` + seIndex" v-for="(se, seIndex) in searchEngines">{{ se.name }}</option>
                     </select>
                 </div>
-                <div class="col-9">
+                <div class="col-8">
                     <input type="text" class="form-control" v-model="goKeyword" @change="keywordChange" />
                 </div>
-                <div class="col-1">
-                    <a :href="goUrl" class="btn btn-primary" target="_blank">GO</a>
+                <div class="col-2">
+                    <a :href="goUrl" class="btn btn-primary" target="_blank">Search</a>
                 </div>
             </div>
 
-            <div class="mt-5 clearfix">
-                <div class="col-2 float-start">
-                    <div class="row btn-group-vertical">
-                         <a href="/bookmark" class="btn btn-primary">Bookmark Manager</a>
-                         <a href="/bookmark/tag" class="btn btn-primary">Bookmark Tag Manager</a>
-                         <a href="/exrate" class="btn btn-primary">Exchange Rate</a>
-                    </div>
-                </div>
-                <div class="col-10 float-end">
+            <div class="row mt-5">
+                <div class="col-12">
                     <div>
                         <button type="button" :class="bookmarkTagValue === tag.name ? `btn btn-danger me-4 mb-4` : `btn btn-dark me-4 mb-4`"
                             @click="tagClick(tag.name)"
