@@ -1,13 +1,33 @@
 package u_file
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 )
 
-func ReadJson(filePath string, data interface{}) (err error) {
+func Read(filePath string) (fileContent []string, err error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	reader := bufio.NewReader(file)
+	for {
+		input, errRead := reader.ReadString('\n')
+		fileContent = append(fileContent, input)
+		if errRead == io.EOF {
+			return
+		}
+	}
+}
+
+func ReadAllForJson(filePath string, data interface{}) (err error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return
@@ -18,6 +38,19 @@ func ReadJson(filePath string, data interface{}) (err error) {
 		return
 	}
 	return json.Unmarshal(fileBytes, data)
+}
+
+func Write(filePath string, fileContent string) error {
+	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	output := bufio.NewWriter(file)
+	output.WriteString(fmt.Sprint(fileContent))
+	output.Flush()
+	return nil
 }
 
 func OverWriteFormatJson(filePath string, data interface{}) error {

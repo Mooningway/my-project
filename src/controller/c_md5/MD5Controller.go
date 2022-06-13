@@ -2,7 +2,7 @@ package c_md5
 
 import (
 	"my-project/src/common"
-	"my-project/src/utils/u_md5"
+	"my-project/src/utils/encryption/u_md5"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
