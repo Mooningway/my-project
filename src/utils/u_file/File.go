@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-func Read(filePath string) (fileContent []string, err error) {
+func ReadLine(filePath string) (fileContent []string, err error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return
