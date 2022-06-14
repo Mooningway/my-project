@@ -4,14 +4,11 @@
     <head>
         <meta charset="utf-8" />
         <title>Bookmark Manager</title>
-        <link rel="stylesheet" href="/static/bootstrap.css" />
-        <link rel="stylesheet" href="/static/common.css" />
-        <script src="/static/jquery.js"></script>
-        <script src="/static/vue.js"></script>
-        <script src="/static/common.js"></script>
+        {{{ template "common" }}}
     </head>
 
     <body>
+        {{{ template "menu" }}}
         <div id="bookmark-app" class="container box margin-t-100">
             <h4 class="mb-5">
                 <ol class="breadcrumb bold">
@@ -24,13 +21,8 @@
                 <div class="col-1">
                     <button type="button" class="btn btn-primary" @click="toEditor(`Add`)">Add</button>
                 </div>
-                <div class="col-4">
+                <div class="col-6">
                     <input type="text" class="form-control" v-model="queryForm.keyword" />
-                </div>
-                <div class="col-4">
-                    <select class="form-select" v-model="queryForm.tag">
-                        <option :value="tag.name" :key="tag.rowid + tagIndex" v-for="(tag, tagIndex) in bookmarkTags">{{ tag.name }}</option>
-                    </select>
                 </div>
                 <div class="col-1">
                     <button type="button" class="btn btn-primary" @click="getBookmarks">Search</button>
@@ -40,36 +32,47 @@
                 </div>
             </div>
 
-            <table class="table table-hover" v-if="bookmarksView">
-                <thead>
-                    <tr>
-                        <th class="text-center">Name</th>
-                        <th class="text-center">Tag</th>
-                        <th class="text-center">Sort</th>
-                        <th class="text-center">Operate</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr :key="b.rowid + bIndex" v-for="(b, bIndex) in bookmarks">
-                        <td class="text-center">{{ b.name }}</td>
-                        <td class="text-center">{{ b.tag }}</td>
-                        <td class="text-center">{{ b.sort }}</td>
-                        <td class="text-center">
-                            <a :href="b.link" class="btn btn-success btn-sm me-3" target="_blank">GO</a>
-                            <button type="button" class="btn btn-primary btn-sm me-3" @click="toEditor(`Update`, b.rowid)">Editor</button>
-                            <button type="button" class="btn btn-danger btn-sm" @click="toEditor(`Delete`, b.rowid)">Delete</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <nav class="row" v-if="bookmarksView">
-                <ul class="pagination justify-content-end">
-                    <li :class="pageIndex === queryForm.page ? `page-item active` : `page-item`" :key="`page_` + pageIndex" v-for="pageIndex in queryForm.lastPage">
-                        <a class="page-link" href="javascript: void(0)" v-if="pageIndex === queryForm.page">{{ pageIndex }}</a>
-                        <a class="page-link" href="javascript: void(0)" @click="pageClick(pageIndex)" v-else>{{ pageIndex }}</a>
-                    </li>
-                </ul>
-            </nav>
+            <div class="row mt-5">
+                <div class="col-4">
+                    <button :class="queryForm.tag === `` ? `btn btn-danger btn-sm me-3 mb-3` : `btn btn-dark btn-sm me-3 mb-3`" type="button"
+                        @click="tagClick(``)">All</button>
+                    <button :class="queryForm.tag === tag.name ? `btn btn-danger btn-sm me-3 mb-3` : `btn btn-dark btn-sm me-3 mb-3`" type="button"
+                        @click="tagClick(tag.name)"
+                        :key="tag.rowid + tagIndex" v-for="(tag, tagIndex) in bookmarkTags">{{ tag.name }}</button>
+                </div>
+                <div class="col-8">
+                    <table class="table table-hover" v-if="bookmarksView">
+                        <thead>
+                            <tr>
+                                <th class="text-center">Name</th>
+                                <th class="text-center">Tag</th>
+                                <th class="text-center">Sort</th>
+                                <th class="text-center">Operate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr :key="b.rowid + bIndex" v-for="(b, bIndex) in bookmarks">
+                                <td class="text-center">{{ b.name }}</td>
+                                <td class="text-center">{{ b.tag }}</td>
+                                <td class="text-center">{{ b.sort }}</td>
+                                <td class="text-center">
+                                    <a :href="b.link" class="btn btn-success btn-sm me-3" target="_blank">GO</a>
+                                    <button type="button" class="btn btn-primary btn-sm me-3" @click="toEditor(`Update`, b.rowid)">Editor</button>
+                                    <button type="button" class="btn btn-danger btn-sm" @click="toEditor(`Delete`, b.rowid)">Delete</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <nav class="row" v-if="bookmarksView">
+                        <ul class="pagination justify-content-end">
+                            <li :class="pageIndex === queryForm.page ? `page-item active` : `page-item`" :key="`page_` + pageIndex" v-for="pageIndex in queryForm.lastPage">
+                                <a class="page-link" href="javascript: void(0)" v-if="pageIndex === queryForm.page">{{ pageIndex }}</a>
+                                <a class="page-link" href="javascript: void(0)" @click="pageClick(pageIndex)" v-else>{{ pageIndex }}</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
 
             <form v-if="bookmarkEditView">
                 <div class="mb-4 row">

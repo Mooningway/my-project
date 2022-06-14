@@ -36,6 +36,10 @@ const BookmarkApp = {
             this.queryForm.keyword = ``
             this.queryForm.tag = ``
         },
+        tagClick(tag) {
+            this.queryForm.tag = tag
+            this.getBookmarks()
+        },
         pageClick(page) {
             this.queryForm.page = Number(page)
             this.getBookmarks()

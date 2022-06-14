@@ -4,24 +4,11 @@
     <head>
         <meta charset="utf-8" />
         <title>Index</title>
-        <link rel="stylesheet" href="/static/bootstrap.css" />
-        <link rel="stylesheet" href="/static/common.css" />
-        <script src="/static/jquery.js"></script>
-        <script src="/static/bootstrap.js"></script>
-        <script src="/static/vue.js"></script>
-        <script src="/static/common.js"></script>
+        {{{ template "common" }}}
     </head>
 
     <body>
-        <div class="dropdown position-absolute top-0 end-0">
-            <button class="btn btn-dark btn-sm dropdown-toggle" type="button" id="menu" data-bs-toggle="dropdown" aria-expanded="false">Menu</button>
-            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="menu">
-                <li><a href="/bookmark" class="dropdown-item">Bookmark Manager</a></li>
-                <li><a href="/bookmark/tag" class="dropdown-item">Bookmark Tag Manager</a></li>
-                <li><a href="/exrate" class="dropdown-item">Exchange Rate</a></li>
-                <li><a href="/md5" class="dropdown-item">MD5</a></li>
-            </ul>
-        </div>
+        {{{ template "menu" }}}
 
         <div id="index-app" class="container">
             <div class="row mt-5"></div>
