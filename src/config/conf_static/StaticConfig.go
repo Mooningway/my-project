@@ -2,6 +2,7 @@ package conf_static
 
 // Static resource configuration
 import (
+	"my-project/src/controller/c_base64"
 	"my-project/src/controller/c_bookmark"
 	"my-project/src/controller/c_bookmark_tag"
 	"my-project/src/controller/c_exchange_rate"
@@ -22,4 +23,5 @@ func Config(engine *gin.Engine) {
 	engine.GET(`/bookmark/tag`, c_bookmark_tag.Index)
 	engine.GET(`/bookmark`, c_bookmark.Index)
 	engine.GET(`/md5`, c_md5.Index)
+	engine.GET(`/base64`, c_base64.Index)
 }

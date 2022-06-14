@@ -1,0 +1,53 @@
+{{{ define "base64.html" }}}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Base64</title>
+        {{{ template "common" }}}
+    </head>
+
+    <body>
+        {{{ template "menu" }}}
+        <div id="base64-app" class="container box margin-t-100">
+            <h4 class="mb-5">
+                <ol class="breadcrumb bold">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item active">Base64</li>
+                </ol>
+            </h4>
+
+            <div class="row">
+                <label class="col-5 form-label bold">Source</label>
+                <label class="col-2 form-label bold"></label>
+                <label class="col-5 form-label bold">Result</label>
+            </div>
+
+            <div class="row">
+                <div class="col-5">
+                    <textarea rows="12" class="form-control resize-none" v-model="source"></textarea>
+                </div>
+                <div class="col-2 text-center">
+                    <div class="mt-5">
+                        <button type="button" class="btn btn-primary" @click="encode">&gt;&gt;</button>
+                    </div>
+                    <div class="mt-5">
+                        <button type="button" class="btn btn-primary" @click="decode">&lt;&lt;</button>
+                    </div>
+                    <div class="mt-5">
+                        <input class="form-control" type="file" ref="fileRef" accept="image/png,image/jpeg,image/gif,image/webp" @change="fileUpload" />
+                    </div>
+                    <div class="mt-5">
+                        <button type="button" class="btn btn-primary" @click="resetClick">Reset</button>
+                    </div>
+                </div>
+                <div class="col-5">
+                    <textarea rows="12" class="form-control resize-none" v-model="result"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <script src="/static//base64//base64.js"></script>
+    </body>
+</html>
+{{{ end }}}

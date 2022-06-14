@@ -21,6 +21,19 @@ function ajaxGetSync(requestUrl, callback) {
     })
 }
 
+function ajaxPostUpload(requestUrl, data, callback) {
+    $.ajax({
+        type: `POST`,
+        url: requestUrl,
+        contentType: false,
+        processData: false,
+        data: data,
+        success: function(response) {
+            callback(response)
+        }
+    })
+}
+
 function ajaxPostJson(requestUrl, data, callback) {
     $.ajax({
         type: `POST`,
