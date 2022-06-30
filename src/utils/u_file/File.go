@@ -3,6 +3,7 @@ package u_file
 import (
 	"bufio"
 	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -25,6 +26,39 @@ func ReadLine(filePath string) (fileContent []string, err error) {
 			return
 		}
 	}
+}
+
+func ReadCsvLine(filePath string) (result [][]string, err error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	for {
+		line, err0 := reader.Read()
+		if len(line) > 0 {
+			result = append(result, line)
+		}
+		if err0 == io.EOF {
+			break
+		}
+		if err0 != nil {
+			err = err0
+			return
+		}
+	}
+	return
+}
+
+func ReadCsvAll(filePath string) (result [][]string, err error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+	return csv.NewReader(file).ReadAll()
 }
 
 func ReadAllForJson(filePath string, data interface{}) (err error) {
