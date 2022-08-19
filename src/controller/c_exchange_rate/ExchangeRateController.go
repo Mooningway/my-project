@@ -5,7 +5,6 @@ import (
 	"my-project/src/common"
 	"my-project/src/logger"
 	"my-project/src/service/s_exchange_rate"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,10 +13,6 @@ type convert struct {
 	FromCode string `json:"fromCode"`
 	ToCode   string `json:"toCode"`
 	Amount   string `json:"amount"`
-}
-
-func Index(c *gin.Context) {
-	c.HTML(http.StatusOK, `exchange_rate.html`, nil)
 }
 
 func Router(r *gin.Engine) {
@@ -72,6 +67,6 @@ func Router(r *gin.Engine) {
 		if err != nil {
 			logger.Print(`Delete rate data error: %v`, err)
 		}
-		common.SuccessJson(``, nil, ctx)
+		common.SuccessJson(`Delete data success`, nil, ctx)
 	})
 }

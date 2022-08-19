@@ -43,22 +43,14 @@ func ErrorJson(msg string, data interface{}, ctx *gin.Context) {
 }
 
 func SuccessPageJson(msg string, page, pageSize, total int64, data interface{}, ctx *gin.Context) {
-	data1 := data
-	if data1 == nil {
-		data1 = make(map[string]interface{})
-	}
 	lastPage, prevPage, nextPage := initPage(page, pageSize, total)
-	ctx.JSON(http.StatusOK, resultPage{Code: `200`, Data: data1, Msg: msg,
+	ctx.JSON(http.StatusOK, resultPage{Code: `200`, Data: data, Msg: msg,
 		Page: page, PageSize: pageSize, Total: total, FirstPage: 1, PrevPage: prevPage, NextPage: nextPage, LastPage: lastPage})
 }
 
 func ErrorPageJson(msg string, page, pageSize, total int64, data interface{}, ctx *gin.Context) {
-	data1 := data
-	if data1 == nil {
-		data1 = make(map[string]interface{})
-	}
 	lastPage, prevPage, nextPage := initPage(page, pageSize, total)
-	ctx.JSON(http.StatusOK, resultPage{Code: `500`, Data: data1, Msg: msg,
+	ctx.JSON(http.StatusOK, resultPage{Code: `500`, Data: data, Msg: msg,
 		Page: page, PageSize: pageSize, Total: total, FirstPage: 1, PrevPage: prevPage, NextPage: nextPage, LastPage: lastPage})
 }
 
@@ -70,9 +62,6 @@ func initPage(page, pageSize, total int64) (lastPage, prevPage, nextPage int64) 
 	}
 	if pageSize != 0 && total%pageSize != 0 {
 		lastPage++
-	}
-	if lastPage <= 0 {
-		lastPage = 1
 	}
 	prevPage = page - 1
 	if prevPage < 1 {

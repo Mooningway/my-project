@@ -5,14 +5,9 @@ import (
 	"my-project/src/common"
 	"my-project/src/logger"
 	"my-project/src/utils/encryption/u_base64"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
-
-func Index(c *gin.Context) {
-	c.HTML(http.StatusOK, `base64.html`, nil)
-}
 
 type base64Dto struct {
 	Source string `json:"source"`

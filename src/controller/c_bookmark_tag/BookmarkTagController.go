@@ -6,14 +6,9 @@ import (
 	"my-project/src/model"
 	"my-project/src/service/s_bookmark_tag"
 	"my-project/src/utils/u_string"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
-
-func Index(c *gin.Context) {
-	c.HTML(http.StatusOK, `bookmark_tag.html`, nil)
-}
 
 func Router(r *gin.Engine) {
 

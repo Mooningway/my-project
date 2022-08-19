@@ -15,7 +15,7 @@ func Encode(val []byte) string {
 func Decode(val []byte) string {
 	result, err := base64.StdEncoding.DecodeString(string(val))
 	if err != nil {
-		log.Panicln(err)
+		log.Println(err)
 		return ``
 	}
 	return string(result)

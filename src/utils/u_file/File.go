@@ -81,10 +81,25 @@ func Write(filePath string, fileContent string) error {
 	}
 	defer file.Close()
 
-	output := bufio.NewWriter(file)
-	output.WriteString(fmt.Sprint(fileContent))
-	output.Flush()
+	write := bufio.NewWriter(file)
+	write.WriteString(fmt.Sprint(fileContent))
+	write.Flush()
 	return nil
+}
+
+func WriteLine(filePath string, content []string) (err error) {
+	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	write := bufio.NewWriter(file)
+	for _, val := range content {
+		fmt.Fprint(write, val)
+	}
+	write.Flush()
+	return
 }
 
 func OverWriteFormatJson(filePath string, data interface{}) error {
