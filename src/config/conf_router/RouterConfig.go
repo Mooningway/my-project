@@ -8,6 +8,7 @@ import (
 	"my-project/src/controller/c_bookmark_tag"
 	"my-project/src/controller/c_exchange_rate"
 	"my-project/src/controller/c_md5"
+	"my-project/src/controller/c_random"
 	"my-project/src/controller/c_request"
 	"my-project/src/controller/c_search_engine"
 
@@ -23,4 +24,5 @@ func Config(router *gin.Engine) {
 	c_base64.Router(router)
 	c_request.Router(router)
 	c_aes.Router(router)
+	c_random.Router(router)
 }
