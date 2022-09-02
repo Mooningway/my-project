@@ -1,5 +1,14 @@
 package u_aes
 
+/*
+	AES (Data Encryption Standard)
+
+	key length:
+	16 = aes-128
+	24 = aes-192
+	32 = aes-256
+*/
+
 import (
 	"bytes"
 	"crypto/aes"
@@ -10,6 +19,8 @@ import (
 )
 
 const (
+	OUT_PUT_BSAE64      string = `base64`
+	OUT_PUT_HEX         string = `hex`
 	KEY_LENGTH_16_24_32 string = `the key length must be 16/24/32`
 )
 
