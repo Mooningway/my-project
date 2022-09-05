@@ -25,10 +25,10 @@ func GenerateKeyX509(bits int, pkcs string) (privateKey, publicKey string, err e
 	}
 
 	var privateKeyBytes, publicKeyBytes []byte
-	if strings.ToUpper(pkcs) == PKCS1 {
+	if strings.ToLower(pkcs) == PKCS1 {
 		// PKCS1
 		privateKeyBytes = x509.MarshalPKCS1PrivateKey(rsaPrivateKey)
-	} else if strings.ToUpper(pkcs) == PKCS8 {
+	} else if strings.ToLower(pkcs) == PKCS8 {
 		// PKCS8
 		privateKeyBytes, err = x509.MarshalPKCS8PrivateKey(rsaPrivateKey)
 		if err != nil {
@@ -85,12 +85,13 @@ func EncryptX509(originalText, publicKey, outEncoding string) (ciperText string,
 		buffer.Write(cipherText)
 	}
 
-	if OUT_PUT_BSAE64 == strings.ToLower(outEncoding) {
+	if strings.ToLower(outEncoding) == OUT_PUT_BSAE64 {
 		// Base64
-		ciperText = hex.EncodeToString(buffer.Bytes())
+		ciperText = base64.StdEncoding.EncodeToString(buffer.Bytes())
 	} else {
 		// Hex
-		ciperText = base64.StdEncoding.EncodeToString(buffer.Bytes())
+		ciperText = hex.EncodeToString(buffer.Bytes())
+
 	}
 	return
 }
@@ -105,7 +106,7 @@ func DecryptX509(cipherText, privateKey, pkcs, outEncoding string) (originalText
 	}
 
 	var rsaPrivateKey *rsa.PrivateKey
-	if strings.ToUpper(pkcs) == PKCS1 {
+	if strings.ToLower(pkcs) == PKCS1 {
 		// PKCS1
 		rsaPrivateKey1, err1 := x509.ParsePKCS1PrivateKey(block.Bytes)
 		if err1 != nil {
@@ -113,7 +114,7 @@ func DecryptX509(cipherText, privateKey, pkcs, outEncoding string) (originalText
 			return
 		}
 		rsaPrivateKey = rsaPrivateKey1
-	} else if strings.ToUpper(pkcs) == PKCS8 {
+	} else if strings.ToLower(pkcs) == PKCS8 {
 		// PKCS8
 		rsaKey, err1 := x509.ParsePKCS8PrivateKey(block.Bytes)
 		if err1 != nil {
@@ -133,7 +134,7 @@ func DecryptX509(cipherText, privateKey, pkcs, outEncoding string) (originalText
 	}
 
 	var cipherTextBytes []byte
-	if OUT_PUT_BSAE64 == strings.ToLower(outEncoding) {
+	if strings.ToLower(outEncoding) == OUT_PUT_BSAE64 {
 		// Base64
 		cipherTextBytes, err = base64.StdEncoding.DecodeString(cipherText)
 	} else {

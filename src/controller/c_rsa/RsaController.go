@@ -17,7 +17,7 @@ type rsaDto struct {
 }
 
 func Router(r *gin.Engine) {
-	r.POST(`/api/rsa/key`, func(ctx *gin.Context) {
+	r.POST(`/api/rsa/x509/key`, func(ctx *gin.Context) {
 		data := rsaDto{}
 		ctx.ShouldBindJSON(&data)
 
@@ -32,7 +32,7 @@ func Router(r *gin.Engine) {
 		}
 	})
 
-	r.POST(`/api/rsa/encrypt`, func(ctx *gin.Context) {
+	r.POST(`/api/rsa/x509/encrypt`, func(ctx *gin.Context) {
 		data := rsaDto{}
 		ctx.ShouldBindJSON(&data)
 		result, err := u_rsa.EncryptX509(data.Text, data.Publickey, data.OutputEncoding)
@@ -44,7 +44,7 @@ func Router(r *gin.Engine) {
 		}
 	})
 
-	r.POST(`/api/rsa/decrypt`, func(ctx *gin.Context) {
+	r.POST(`/api/rsa/x509/decrypt`, func(ctx *gin.Context) {
 		data := rsaDto{}
 		ctx.ShouldBindJSON(&data)
 		result, err := u_rsa.DecryptX509(data.Text, data.Privatekey, data.Pkcs, data.OutputEncoding)
