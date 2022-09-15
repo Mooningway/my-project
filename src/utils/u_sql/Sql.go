@@ -1,12 +1,27 @@
 package u_sql
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
+	"reflect"
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
+)
+
+const (
+	SQL_SQLITE string = `SQLITE`
+
+	SQL_NOT_NULL          string = `NOT NULL`
+	SQL_UNIQUE            string = `UNIQUE`
+	SQLITE_AUTO_INCREMENT string = `AUTOINCREMENT`
+
+	SQLITE_ROWID   string = `rowid`
+	SQLITE_TEXT    string = `TEXT`
+	SQLITE_INTEGER string = `INTEGER`
+	SQLITE_NUMERIC string = `NUMERIC`
+	SQLITE_BLOB    string = `BLOB`
+	SQLITE_REAL    string = `REAL`
 )
 
 type Sql struct {
@@ -14,30 +29,23 @@ type Sql struct {
 	DataSourceName string
 	task           bool
 	DB             *sql.DB
+	DbType         DbType
 }
 
-type columnValue struct {
-	columns []string
-	values  map[string]interface{}
-}
+type DbType int
 
-type where struct {
-	conditions []condition
-	orders     []order
-	limit0     int64
-	limit1     int64
-}
+const (
+	SQLite DbType = 0 + iota
+	MySQL
+)
 
-type condition struct {
-	condition  string
-	column     string
-	expression string
-	value      interface{}
-}
+var sqlTypes = []string{`sqlite`, `mysql`}
 
-type order struct {
-	column string
-	sort   string
+func (dt DbType) String() string {
+	if dt >= SQLite && dt <= MySQL {
+		return sqlTypes[dt]
+	}
+	return `DB type not support`
 }
 
 // Connection
@@ -51,22 +59,7 @@ func (s *Sql) Open() (err error) {
 	return
 }
 
-func (s *Sql) NewColumn() *columnValue {
-	return &columnValue{values: map[string]interface{}{}}
-}
-
-func (c *columnValue) Set(column string, value interface{}) *columnValue {
-	c.columns = append(c.columns, column)
-	c.values[column] = value
-	return c
-}
-
-func (s *Sql) NewWhere() *where {
-	return &where{}
-}
-
 func (s *Sql) Task(task func() error) (err error) {
-	s.task = true
 	err = s.Open()
 	if err != nil {
 		return
@@ -75,122 +68,121 @@ func (s *Sql) Task(task func() error) (err error) {
 	return task()
 }
 
-func (w *where) AndEq(column string, value interface{}) *where {
-	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `=`, value: value})
-	return w
+func (s *Sql) NewQuery() *query {
+	return &query{}
 }
 
-func (w *where) AndNq(column string, value interface{}) *where {
-	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `!=`, value: value})
-	return w
+func (s *Sql) NewUpdate() *update {
+	return &update{data: map[string]interface{}{}}
 }
 
-func (w *where) AndLike(column string, value interface{}) *where {
-	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `LIKE`, value: `%` + fmt.Sprintf(`%v`, value) + `%`})
-	return w
+func (s *Sql) isSQLite() bool {
+	return s.DbType == SQLite
 }
 
-func (w *where) AndLt(column string, value interface{}) *where {
-	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `<`, value: value})
-	return w
+func (s *Sql) isRowid(field string) bool {
+	return field == SQLITE_ROWID
 }
 
-func (w *where) AndLte(column string, value interface{}) *where {
-	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `<=`, value: value})
-	return w
-}
+func (s *Sql) orm(tableName string, ormStruct interface{}) Orm {
+	typeOf := reflect.TypeOf(ormStruct)
+	valueOf := reflect.ValueOf(ormStruct)
+	primaryKeyCount := 0
 
-func (w *where) AndGt(column string, value interface{}) *where {
-	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `>=`, value: value})
-	return w
-}
+	for i := 0; i < typeOf.NumField(); i++ {
+		fieldIndex := typeOf.Field(i).Tag.Get(`index`)
+		if strings.Contains(strings.ToLower(fieldIndex), `pk`) {
+			primaryKeyCount = primaryKeyCount + 1
+		}
+	}
 
-func (w *where) AndGte(column string, value interface{}) *where {
-	w.conditions = append(w.conditions, condition{condition: `AND`, column: column, expression: `>=`, value: value})
-	return w
-}
+	columns := make([]Column, 0)
+	for i := 0; i < typeOf.NumField(); i++ {
+		col := Column{}
+		valueOfInterface := valueOf.Field(i).Interface()
 
-func (w *where) OrEq(column string, value interface{}) *where {
-	w.conditions = append(w.conditions, condition{condition: `OR`, column: column, expression: `=`, value: value})
-	return w
-}
+		// Field
+		field := typeOf.Field(i).Tag.Get(`json`)
+		if field == `` {
+			field = snakeString(field)
+		}
+		col.Field = field
 
-func (w *where) OrNq(column string, value interface{}) *where {
-	w.conditions = append(w.conditions, condition{condition: `OR`, column: column, expression: `!=`, value: value})
-	return w
-}
-
-func (w *where) OrLike(column string, value interface{}) *where {
-	w.conditions = append(w.conditions, condition{condition: `OR`, column: column, expression: `LIKE`, value: `%` + fmt.Sprintf(`%v`, value) + `%`})
-	return w
-}
-
-func (w *where) OrLt(column string, value interface{}) *where {
-	w.conditions = append(w.conditions, condition{condition: `OR`, column: column, expression: `<`, value: value})
-	return w
-}
-
-func (w *where) OrLte(column string, value interface{}) *where {
-	w.conditions = append(w.conditions, condition{condition: `OR`, column: column, expression: `<=`, value: value})
-	return w
-}
-
-func (w *where) OrGt(column string, value interface{}) *where {
-	w.conditions = append(w.conditions, condition{condition: `OR`, column: column, expression: `>`, value: value})
-	return w
-}
-
-func (w *where) OrGte(column string, value interface{}) *where {
-	w.conditions = append(w.conditions, condition{condition: `OR`, column: column, expression: `>=`, value: value})
-	return w
-}
-
-func (w *where) Asc(column string) *where {
-	w.orders = append(w.orders, order{column: column, sort: `ASC`})
-	return w
-}
-
-func (w *where) Desc(column string) *where {
-	w.orders = append(w.orders, order{column: column, sort: `DESC`})
-	return w
-}
-
-func (w *where) Limit(pageNum, pageSize int64) *where {
-	w.limit0 = (pageNum - 1) * pageSize
-	w.limit1 = pageSize
-	return w
-}
-
-func (w *where) toSql() (whereSql string, values []interface{}) {
-	var sqlBuffer bytes.Buffer
-
-	if len(w.conditions) > 0 {
-		for ci, cv := range w.conditions {
-			if ci == 0 {
-				sqlBuffer.WriteString(` WHERE ` + cv.column + ` ` + cv.expression + ` ?`)
+		// Field type
+		fieldType := typeOf.Field(i).Tag.Get(`type`)
+		if fieldType == `` {
+			if s.isSQLite() {
+				// SQLite
+				switch valueOfInterface.(type) {
+				case string:
+					fieldType = SQLITE_TEXT
+				case int, int8, int16, int32, int64:
+					fieldType = SQLITE_INTEGER
+				case float32, float64:
+					fieldType = SQLITE_NUMERIC
+				}
 			} else {
-				sqlBuffer.WriteString(` ` + cv.condition + ` ` + cv.column + ` ` + cv.expression + ` ?`)
+				// Others undo
 			}
-			values = append(values, cv.value)
 		}
-	}
+		col.Type = fieldType
 
-	orderSql := make([]string, 0)
-	if len(w.orders) > 0 {
-		for _, ov := range w.orders {
-			orderSql = append(orderSql, ov.column+` `+ov.sort)
+		// Index
+		fieldIndex := typeOf.Field(i).Tag.Get(`index`)
+
+		// Primary Key & Auto Increment
+		if strings.Contains(strings.ToLower(fieldIndex), `pk`) {
+			col.PrimaryKey = true
+			if strings.Contains(strings.ToLower(fieldIndex), `ai`) && primaryKeyCount == 1 {
+				col.AutoIncrement = true
+			}
 		}
-	}
-	if len(orderSql) > 0 {
-		sqlBuffer.WriteString(` ORDER BY `)
-		sqlBuffer.WriteString(strings.Join(orderSql, `,`))
+
+		// Not Null
+		if strings.Contains(strings.ToLower(fieldIndex), `nn`) {
+			col.NotNull = true
+		}
+
+		// Unique
+		if strings.Contains(strings.ToLower(fieldIndex), `un`) {
+			col.Unique = true
+		}
+
+		// Default value
+		fieldDefault := typeOf.Field(i).Tag.Get(`default`)
+		if fieldDefault != `` {
+			switch valueOfInterface.(type) {
+			case string:
+				col.ValueDefault = fmt.Sprintf(`"%s"`, fieldDefault)
+			default:
+				col.ValueDefault = fmt.Sprintf(`%v`, fieldDefault)
+			}
+		}
+
+		// Value
+		col.Value = valueOfInterface
+
+		columns = append(columns, col)
 	}
 
-	if w.limit1 > 0 {
-		sqlBuffer.WriteString(` LIMIT ?, ?`)
-		values = append(values, w.limit0, w.limit1)
-	}
+	return Orm{Table: tableName, Columns: columns, PrimaryKeyCount: primaryKeyCount}
+}
 
-	whereSql = sqlBuffer.String()
-	return
+func snakeString(val string) string {
+	valLen := len(val)
+	hasUnderLine := false
+	valBytes := make([]byte, 0)
+
+	for i := 0; i < valLen; i++ {
+		v := val[i]
+		if v == '_' {
+			hasUnderLine = true
+		}
+		if i > 0 && v >= 'A' && v <= 'Z' && !hasUnderLine {
+			valBytes = append(valBytes, '_')
+			hasUnderLine = false
+		}
+		valBytes = append(valBytes, v)
+	}
+	return strings.ToLower(string(valBytes))
 }

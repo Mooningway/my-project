@@ -13,22 +13,22 @@ const table string = `bookmark`
 func Page(dto model.BookmarkDto) (bookmarks []model.Bookmark, total int64, err error) {
 	sqlite := conf_sql.InitSqlite()
 	err = sqlite.Task(func() error {
-		w := sqlite.NewWhere()
+		query := sqlite.NewQuery()
 		if len(dto.Keyword) > 0 {
-			w.AndLike(`name`, dto.Keyword)
+			query.AndLike(`name`, dto.Keyword)
 		}
 		if len(dto.Tag) > 0 {
-			w.AndEq(`tag`, dto.Tag)
+			query.AndEq(`tag`, dto.Tag)
 		}
 
-		total, err = sqlite.Count(table, *w)
+		total, err = sqlite.Count(table, *query)
 		if err != nil {
 			return err
 		}
 
 		if total > 0 {
-			w.Desc(`sort`).Desc(`rowid`).Limit(dto.Page, dto.PageSize).Limit(dto.Page, dto.PageSize)
-			err = sqlite.FindSlice(table, *w, &bookmarks, `rowid`, `*`)
+			query.Desc(`sort`).Desc(`rowid`).Page(dto.Page, dto.PageSize)
+			err = sqlite.FindSlice(table, *query, &bookmarks, `rowid`, `*`)
 		}
 		return err
 	})
@@ -37,8 +37,7 @@ func Page(dto model.BookmarkDto) (bookmarks []model.Bookmark, total int64, err e
 
 func ById(id int64) (bookmark model.Bookmark, err error) {
 	sqlite := conf_sql.InitSqlite()
-	w := sqlite.NewWhere().AndEq(`rowid`, id)
-	err = sqlite.FindOne(table, *w, &bookmark, `rowid`, `*`)
+	err = sqlite.FindById(table, id, `rowid`, `*`)
 	return
 }
 
@@ -76,8 +75,7 @@ func Save(data *model.Bookmark) (msg string, ok bool) {
 
 func insert(data model.Bookmark) (msg string, ok bool) {
 	sqlite := conf_sql.InitSqlite()
-	insertSet := sqlite.NewColumn().Set(`name`, data.Name).Set(`tag`, data.Tag).Set(`link`, data.Link).Set(`description`, data.Description).Set(`sort`, data.Sort)
-	_, err := sqlite.Insert(table, *insertSet)
+	_, err := sqlite.Insert(table, data)
 	if err != nil {
 		msg = fmt.Sprintf(`Save bookmark error: %v`, err)
 		return
@@ -90,9 +88,7 @@ func insert(data model.Bookmark) (msg string, ok bool) {
 
 func update(data model.Bookmark) (msg string, ok bool) {
 	sqlite := conf_sql.InitSqlite()
-	updateSet := sqlite.NewColumn().Set(`name`, data.Name).Set(`tag`, data.Tag).Set(`link`, data.Link).Set(`description`, data.Description).Set(`sort`, data.Sort)
-	w := sqlite.NewWhere().AndEq(`rowid`, data.Id)
-	_, err := sqlite.Update(table, *updateSet, *w)
+	_, err := sqlite.UpdateById(table, data, data.Id)
 	if err != nil {
 		msg = fmt.Sprintf(`Update bookmark error: %v`, err)
 		return
@@ -105,8 +101,7 @@ func update(data model.Bookmark) (msg string, ok bool) {
 
 func Delete(id int64) (msg string, ok bool) {
 	sqlite := conf_sql.InitSqlite()
-	w := sqlite.NewWhere().AndEq(`rowid`, id)
-	_, err := sqlite.Delete(table, *w)
+	_, err := sqlite.DeleteById(table, id)
 	if err != nil {
 		msg = fmt.Sprintf(`Delete bookmark error: %v`, err)
 		return
@@ -119,7 +114,7 @@ func Delete(id int64) (msg string, ok bool) {
 
 func ByTag(tag string) (bookmarks []model.Bookmark, err error) {
 	sqlite := conf_sql.InitSqlite()
-	w := sqlite.NewWhere().AndEq(`tag`, tag)
-	err = sqlite.FindSlice(table, *w, &bookmarks, `*`, `rowid`)
+	query := sqlite.NewQuery().AndEq(`tag`, tag)
+	err = sqlite.FindSlice(table, *query, &bookmarks, `*`, `rowid`)
 	return
 }

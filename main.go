@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"my-project/src/config/conf_router"
 	"my-project/src/init/init_db"
 
@@ -9,9 +8,8 @@ import (
 )
 
 func main() {
-	err := init_db.Init()
-	if err != nil {
-		log.Println(err)
+	ok := init_db.Init()
+	if !ok {
 		return
 	}
 

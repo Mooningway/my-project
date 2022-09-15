@@ -13,19 +13,19 @@ const table string = `bookmark_tag`
 func Page(dto model.BookmarkDto) (bookmarkTags []model.BookmarkTag, total int64, err error) {
 	sqlite := conf_sql.InitSqlite()
 	err = sqlite.Task(func() error {
-		w := sqlite.NewWhere()
+		query := sqlite.NewQuery()
 		if len(dto.Keyword) > 0 {
-			w.AndLike(`name`, dto.Keyword)
+			query.AndLike(`name`, dto.Keyword)
 		}
 
-		total, err = sqlite.Count(table, *w)
+		total, err = sqlite.Count(table, *query)
 		if err != nil {
 			return err
 		}
 
 		if total > 0 {
-			w.Desc(`sort`).Asc(`rowid`).Limit(dto.Page, dto.PageSize)
-			err = sqlite.FindSlice(table, *w, &bookmarkTags, `*`, `rowid`)
+			query.Desc(`sort`).Asc(`rowid`).Page(dto.Page, dto.PageSize)
+			err = sqlite.FindSlice(table, *query, &bookmarkTags, `*`, `rowid`)
 		}
 		return err
 	})
@@ -34,22 +34,18 @@ func Page(dto model.BookmarkDto) (bookmarkTags []model.BookmarkTag, total int64,
 
 func All() (tags []model.BookmarkTag, err error) {
 	sqlite := conf_sql.InitSqlite()
-	w := sqlite.NewWhere().Desc(`sort`).Asc(`rowid`)
-	err = sqlite.FindSlice(table, *w, &tags, `rowid`, `*`)
+	query := sqlite.NewQuery().Desc(`sort`).Asc(`rowid`)
+	err = sqlite.FindSlice(table, *query, &tags, `rowid`, `*`)
 	return
 }
 
 func ById(id int64) (tag model.BookmarkTag, err error) {
 	sqlite := conf_sql.InitSqlite()
-	w := sqlite.NewWhere().AndEq(`rowid`, id)
-	sqlite.FindOne(table, *w, &tag, `rowid`, `*`)
+	sqlite.FindById(table, id, &tag, `rowid`, `*`)
 	return
 }
 
 func Save(data *model.BookmarkTag) (msg string, ok bool) {
-	if data.Id != 0 {
-		msg = com_msg.ADD_FAIL
-	}
 	data.Name = strings.TrimSpace(data.Name)
 	if len(data.Name) == 0 {
 		msg = com_msg.Required(`Name`)
@@ -74,8 +70,8 @@ func Save(data *model.BookmarkTag) (msg string, ok bool) {
 func insert(data model.BookmarkTag) (msg string, ok bool) {
 	sqlite := conf_sql.InitSqlite()
 
-	w := sqlite.NewWhere().AndEq(`name`, data.Name)
-	count, err := sqlite.Count(table, *w)
+	query := sqlite.NewQuery().AndEq(`name`, data.Name)
+	count, err := sqlite.Count(table, *query)
 	if err != nil {
 		msg = fmt.Sprintf(`Save bookmark tag error: %v`, err)
 		return
@@ -84,9 +80,7 @@ func insert(data model.BookmarkTag) (msg string, ok bool) {
 		msg = com_msg.ExistsNotAdd(`name`)
 		return
 	}
-
-	insertSet := sqlite.NewColumn().Set(`name`, data.Name).Set(`description`, data.Description).Set(`sort`, data.Sort)
-	_, err = sqlite.Insert(table, *insertSet)
+	_, err = sqlite.Insert(table, data)
 	if err != nil {
 		msg = fmt.Sprintf(`Save bookmark tag error: %v`, err)
 		return
@@ -100,8 +94,8 @@ func insert(data model.BookmarkTag) (msg string, ok bool) {
 func update(data model.BookmarkTag) (msg string, ok bool) {
 	sqlite := conf_sql.InitSqlite()
 
-	w1 := sqlite.NewWhere().AndEq(`name`, data.Name).AndNq(`rowid`, data.Id)
-	count1, err := sqlite.Count(table, *w1)
+	query1 := sqlite.NewQuery().AndEq(`name`, data.Name).AndNe(`rowid`, data.Id)
+	count1, err := sqlite.Count(table, *query1)
 	if err != nil {
 		msg = fmt.Sprintf(`Update bookmark tag error: %v`, err)
 		return
@@ -111,8 +105,8 @@ func update(data model.BookmarkTag) (msg string, ok bool) {
 		return
 	}
 
-	w2 := sqlite.NewWhere().AndEq(`name`, data.Name)
-	count2, err := sqlite.Count(`bookmark`, *w2)
+	query2 := sqlite.NewQuery().AndEq(`name`, data.Name)
+	count2, err := sqlite.Count(`bookmark`, *query2)
 	if err != nil {
 		msg = fmt.Sprintf(`Update bookmark tag error: %v`, err)
 		return
@@ -122,9 +116,7 @@ func update(data model.BookmarkTag) (msg string, ok bool) {
 		return
 	}
 
-	updateSet3 := sqlite.NewColumn().Set(`name`, data.Name).Set(`description`, data.Description).Set(`sort`, data.Sort)
-	w3 := sqlite.NewWhere().AndEq(`rowid`, data.Id)
-	_, err = sqlite.Update(table, *updateSet3, *w3)
+	_, err = sqlite.UpdateById(table, data, data.Id)
 	if err != nil {
 		msg = fmt.Sprintf(`Update bookmark tag error: %v`, err)
 		return
@@ -148,8 +140,7 @@ func Delete(id int64) (msg string, ok bool) {
 		return
 	}
 
-	w2 := sqlite.NewWhere().AndEq(`rowid`, id)
-	_, err = sqlite.Delete(table, *w2)
+	_, err = sqlite.DeleteById(table, id)
 	if err != nil {
 		msg = fmt.Sprintf(`Delete bookmark tag error: %v`, err)
 		return

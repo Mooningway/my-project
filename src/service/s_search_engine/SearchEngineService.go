@@ -9,6 +9,6 @@ const table string = `search_engine`
 
 func All() (searchEngines []model.SearchEngine, err error) {
 	sqlite := conf_sql.InitSqlite()
-	err = sqlite.FindSlice(table, *sqlite.NewWhere(), &searchEngines)
+	err = sqlite.FindSlice(table, *sqlite.NewQuery(), &searchEngines)
 	return
 }

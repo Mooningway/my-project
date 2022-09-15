@@ -6,11 +6,11 @@ import (
 	"fmt"
 )
 
-func (s *Sql) Count(table string, w where) (count int64, err error) {
+func (s *Sql) Count(tableName string, q query) (count int64, err error) {
 	var sqlBuffer bytes.Buffer
-	sqlBuffer.WriteString(fmt.Sprintf(`SELECT COUNT(*) FROM %s`, table))
+	sqlBuffer.WriteString(fmt.Sprintf(`SELECT COUNT(*) FROM %s`, tableName))
 
-	whereSql, whereValues := w.toSql()
+	whereSql, whereValues := q.toSql()
 	if len(whereSql) > 0 {
 		sqlBuffer.WriteString(whereSql)
 	}

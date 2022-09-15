@@ -5,11 +5,23 @@ import (
 	"fmt"
 )
 
-func (s *Sql) Delete(table string, w where) (affectCount int64, err error) {
+func (s *Sql) DeleteById(tableName string, id interface{}) (affectCount int64, err error) {
+	var deleteSql string
+	if s.isSQLite() {
+		// SQLite
+		deleteSql = fmt.Sprintf(`DELETE FROM %s WHERE rowid = ?`, tableName)
+	} else {
+		// Others
+		deleteSql = fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, tableName)
+	}
+	return s.DeleteSql(deleteSql, id)
+}
+
+func (s *Sql) Delete(table string, q query) (affectCount int64, err error) {
 	var sqlBuffer bytes.Buffer
 	sqlBuffer.WriteString(fmt.Sprintf(`DELETE FROM %s`, table))
 
-	whereSql, whereValues := w.toSql()
+	whereSql, whereValues := q.toSql()
 	if len(whereSql) > 0 {
 		sqlBuffer.WriteString(whereSql)
 	}

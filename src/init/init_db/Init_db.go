@@ -2,74 +2,60 @@ package init_db
 
 // Project initialization
 import (
-	"errors"
 	"fmt"
+	"log"
 	"my-project/src/config/conf_sql"
+	"my-project/src/model"
 )
 
-func Init() error {
+func Init() bool {
 	// Create Table
-	err := createTable()
-	if err != nil {
-		out := fmt.Sprintf(`Create Table error: %v`, err)
-		return errors.New(out)
+	errors := createTable()
+	if len(errors) > 0 {
+		for _, err := range errors {
+			out := fmt.Sprintf(`Create Table error: %v`, err)
+			log.Println(out)
+		}
+		return false
 	}
+
 	// Insert Data
-	err = insertData()
-	if err != nil {
-		out := fmt.Sprintf(`Insert Data error: %v`, err)
-		return errors.New(out)
+	errors = insertData()
+	if len(errors) > 0 {
+		for _, err := range errors {
+			out := fmt.Sprintf(`Insert Data error: %v`, err)
+			log.Println(out)
+		}
+		return false
 	}
-	return nil
+
+	return true
 }
 
-func createTable() error {
+func createTable() []error {
+	tabMap := make(map[string]interface{})
+	tabMap[TABLE_ENGINE] = model.SearchEngine{}
+	tabMap[TABLE_BOOKMARK] = model.Bookmark{}
+	tabMap[TABLE_BOOKMARK_TAG] = model.BookmarkTag{}
+	tabMap[TABLE_EXRATE_CODE] = model.ExrateCode{}
+	tabMap[TABLE_EXRATE_RATE] = model.ExrateRate{}
+	tabMap[TABLE_NOTE_FOLDER] = model.NoteFolder{}
+	tabMap[TABLE_NOTE] = model.Note{}
+
 	sqlite := conf_sql.InitSqlite()
-	return sqlite.Task(func() (err error) {
-		// exrate_code
-		_, err = sqlite.DB.Exec(sql_create_exrate_code)
-		if err != nil {
-			return
-		}
-		// exrate_rate
-		_, err = sqlite.DB.Exec(sql_create_exrate_rate)
-		if err != nil {
-			return
-		}
-		// bookmark
-		_, err = sqlite.DB.Exec(sql_create_bookmark)
-		if err != nil {
-			return
-		}
-		// bookmark_tag
-		_, err = sqlite.DB.Exec(sql_create_bookmark_tag)
-		if err != nil {
-			return
-		}
-		// search_engine
-		_, err = sqlite.DB.Exec(sql_create_search_engine)
-		if err != nil {
-			return
-		}
-		return
-	})
+	return sqlite.CreateTables(tabMap)
 }
 
-func insertData() error {
-	// exrate_code
-	err := insertExrateCode()
-	if err != nil {
-		return err
+func insertData() []error {
+	tempErrors := make([]error, 0)
+	tempErrors = append(tempErrors, insertExrateCode())   // exrate_code
+	tempErrors = append(tempErrors, insertExrateRate())   // exrate_rate
+	tempErrors = append(tempErrors, insertSearchEngine()) // search_engine
+	errors := make([]error, 0)
+	for _, err := range tempErrors {
+		if err != nil {
+			errors = append(errors, err)
+		}
 	}
-	// exrate_rate
-	err = insertExrateRate()
-	if err != nil {
-		return err
-	}
-	// search_engine
-	err = insertSearchEngine()
-	if err != nil {
-		return err
-	}
-	return nil
+	return errors
 }

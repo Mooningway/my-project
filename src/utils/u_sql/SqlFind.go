@@ -8,16 +8,28 @@ import (
 	"strings"
 )
 
-func (s *Sql) FindOne(table string, w where, formatData interface{}, columns ...string) (err error) {
-	selectSql, values := s.findToSql(true, table, w, columns...)
+func (s *Sql) FindById(tableName string, id, formatData interface{}, columns ...string) (err error) {
+	query := s.NewQuery()
+	if s.isSQLite() {
+		// SQLite
+		query.AndEq(`rowid`, id)
+	} else {
+		// Others
+		query.AndEq(`id`, id)
+	}
+	return s.FindOne(tableName, *query, formatData, columns...)
+}
+
+func (s *Sql) FindOne(tableName string, q query, formatData interface{}, columns ...string) (err error) {
+	selectSql, values := s.findToSql(true, tableName, q, columns...)
 	if err != nil {
 		return
 	}
 	return s.FindOneSql(selectSql, formatData, values...)
 }
 
-func (s *Sql) FindSlice(table string, w where, formatData interface{}, columns ...string) (err error) {
-	selectSql, values := s.findToSql(false, table, w, columns...)
+func (s *Sql) FindSlice(tableName string, q query, formatData interface{}, columns ...string) (err error) {
+	selectSql, values := s.findToSql(false, tableName, q, columns...)
 	if err != nil {
 		return
 	}
@@ -84,20 +96,19 @@ func (s *Sql) FindSliceSql(selectSql string, formatData interface{}, values ...i
 	return
 }
 
-func (s *Sql) findToSql(one bool, table string, w where, columns ...string) (selectSql string, values []interface{}) {
+func (s *Sql) findToSql(one bool, tableName string, q query, columns ...string) (selectSql string, values []interface{}) {
 	columnsSql := `*`
 	if len(columns) > 0 {
 		columnsSql = strings.Join(columns, `,`)
 	}
 
 	var sqlBuffer bytes.Buffer
-	sqlBuffer.WriteString(fmt.Sprintf(`SELECT %s FROM %s`, columnsSql, table))
+	sqlBuffer.WriteString(fmt.Sprintf(`SELECT %s FROM %s`, columnsSql, tableName))
 
-	whereSql, values := w.toSql()
+	whereSql, values := q.toSql()
 	if len(whereSql) > 0 {
 		sqlBuffer.WriteString(whereSql)
 	}
-
 	if one {
 		sqlBuffer.WriteString(` LIMIT 1`)
 	}

@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"my-project/src/api/api_exrate"
 	"my-project/src/config/conf_sql"
+	"my-project/src/model"
 )
 
 func insertExrateCode() error {
 	sqlite := conf_sql.InitSqlite()
 
 	return sqlite.Task(func() error {
-		count, err := sqlite.Count(`exrate_code`, *sqlite.NewWhere())
+		count, err := sqlite.Count(`exrate_code`, *sqlite.NewQuery())
 		if err != nil {
 			return err
 		}
@@ -22,13 +23,12 @@ func insertExrateCode() error {
 			return err
 		}
 
-		columns := []string{`code`, `name`, `sort`}
 		codes := codeData.SupportedCodes
-		values := make([]interface{}, 0)
+		exrateCodes := make([]model.ExrateCode, 0)
 		for index, vals := range codes {
-			values = append(values, vals[0], vals[1], index)
+			exrateCodes = append(exrateCodes, model.ExrateCode{Code: vals[0], Name: vals[1], Sort: index})
 		}
-		_, err = sqlite.InsertMore(`exrate_code`, columns, len(codes), values...)
+		_, err = sqlite.InsertMore(`exrate_code`, exrateCodes)
 		if err != nil {
 			return err
 		}
@@ -40,7 +40,7 @@ func insertExrateRate() error {
 	sqlite := conf_sql.InitSqlite()
 
 	return sqlite.Task(func() error {
-		count, err := sqlite.Count(`exrate_rate`, *sqlite.NewWhere())
+		count, err := sqlite.Count(`exrate_rate`, *sqlite.NewQuery())
 		if err != nil {
 			return err
 		}
@@ -53,9 +53,8 @@ func insertExrateRate() error {
 		}
 
 		jsonBytes, _ := json.Marshal(rateData.ConversionRates)
-
-		insetSet := sqlite.NewColumn().Set(`date_unix`, rateData.TimeLastUpdateUnix).Set(`code`, rateData.BaseCode).Set(`rates`, jsonBytes)
-		_, err = sqlite.Insert(`exrate_rate`, *insetSet)
+		update := sqlite.NewUpdate().Set(`date_unix`, rateData.TimeLastUpdateUnix).Set(`code`, rateData.BaseCode).Set(`rates`, jsonBytes)
+		_, err = sqlite.InsertByUpdate(`exrate_rate`, *update)
 		if err != nil {
 			return err
 		}
